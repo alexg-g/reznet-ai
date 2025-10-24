@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.7">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;html class="dark" lang="en"&gt;&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="utf-8"/&gt;</p>
+<p class="p1">&lt;meta content="width=device-width, initial-scale=1.0" name="viewport"/&gt;</p>
+<p class="p1">&lt;title&gt;GridRunner | Team Communication&lt;/title&gt;</p>
+<p class="p1">&lt;script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;link href="https://fonts.googleapis.com" rel="preconnect"/&gt;</p>
+<p class="p1">&lt;link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/&gt;</p>
+<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;amp;display=swap" rel="stylesheet"/&gt;</p>
+<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/&gt;</p>
+<p class="p1">&lt;script id="tailwind-config"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tailwind.config = {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>darkMode: "class",</p>
+<p class="p1"><span class="Apple-converted-space">      </span>theme: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>extend: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>colors: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"primary": "#0da6f2",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"background-light": "#f5f7f8",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"background-dark": "#101c22",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"neon-cyan": "#00F6FF",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"hot-magenta": "#FF00F7",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"electric-purple": "#9D00FF",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"deep-dark": "#0D0221"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fontFamily: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"display": ["Space Grotesk", "sans-serif"]</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">          </span>borderRadius: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"DEFAULT": "0.125rem",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"lg": "0.25rem",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"xl": "0.5rem",</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"full": "0.75rem"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">          </span>boxShadow: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>'glow-cyan': '0 0 5px #00F6FF, 0 0 10px #00F6FF, 0 0 15px #00F6FF',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>'glow-magenta': '0 0 5px #FF00F7, 0 0 10px #FF00F7, 0 0 15px #FF00F7',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>'glow-purple': '0 0 5px #9D00FF, 0 0 10px #9D00FF, 0 0 15px #9D00FF'</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>.grid-bg {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-image:</p>
+<p class="p1"><span class="Apple-converted-space">        </span>linear-gradient(rgba(0, 246, 255, 0.05) 1px, transparent 1px),</p>
+<p class="p1"><span class="Apple-converted-space">        </span>linear-gradient(90deg, rgba(0, 246, 255, 0.05) 1px, transparent 1px);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>background-size: 2rem 2rem;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>.material-symbols-outlined {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-variation-settings:</p>
+<p class="p1"><span class="Apple-converted-space">        </span>'FILL' 0,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>'wght' 300,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>'GRAD' 0,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>'opsz' 24</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="bg-deep-dark font-display text-gray-200"&gt;</p>
+<p class="p1">&lt;div class="flex h-screen w-full"&gt;</p>
+<p class="p1">&lt;!-- SideNavBar --&gt;</p>
+<p class="p1">&lt;aside class="flex h-full w-64 flex-shrink-0 flex-col bg-deep-dark/80 backdrop-blur-sm border-r border-electric-purple/30"&gt;</p>
+<p class="p1">&lt;div class="flex h-full flex-col p-4"&gt;</p>
+<p class="p1">&lt;div class="flex items-center gap-3 mb-6 p-2"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10 shadow-glow-cyan" data-alt="GridRunner Corp Logo, a glowing geometric shape" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA0J1QHcW8PC3dW5hCK933tm4AMdLSE22k1g2ftkkjkcd3xQ3BSQsv5FBkNqegw-IaDm6ouEklhU4JECjPsdYeAO7vt3ArKzmyqHDxn7LzdRJVDwfwZfdrJMtU9J8aqlgA06773Q5aZxIFoJyC0L6yJphoUyUz4rlZ-nAejOqLxuMGUz6zc-kEllY7NtW7S3IJDrG1BOaapKtM6NGN2mnoNRbI_0CFJi43k2txP5zQTtBQxMAcIySh4o6CL1f6Avg-J5Ooto_krFFcT");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-col"&gt;</p>
+<p class="p1">&lt;h1 class="text-white text-base font-bold leading-normal"&gt;GridRunner Corp&lt;/h1&gt;</p>
+<p class="p1">&lt;p class="text-neon-cyan/80 text-sm font-normal leading-normal"&gt;Online&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex-grow flex flex-col gap-1 overflow-y-auto"&gt;</p>
+<p class="p1">&lt;p class="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 py-2"&gt;Channels&lt;/p&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;tag&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;general&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded bg-electric-purple/20 text-white relative" href="#"&gt;</p>
+<p class="p1">&lt;div class="absolute left-0 top-0 h-full w-1 bg-neon-cyan rounded-r-full shadow-glow-cyan"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-neon-cyan"&gt;tag&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;design&lt;/span&gt;</p>
+<p class="p1">&lt;span class="ml-auto w-2 h-2 rounded-full bg-hot-magenta shadow-glow-magenta animate-pulse"&gt;&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;tag&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;dev&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;tag&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;random&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;p class="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 pt-6 pb-2"&gt;Direct Messages&lt;/p&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;alternate_email&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;jane_doe&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;alternate_email&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;john_smith&lt;/span&gt;</p>
+<p class="p1">&lt;span class="ml-auto text-xs bg-hot-magenta text-white font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-glow-magenta"&gt;2&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;a class="flex items-center gap-3 px-3 py-2 rounded text-gray-300 hover:bg-electric-purple/10 hover:text-white transition-colors duration-200" href="#"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined text-electric-purple"&gt;alternate_email&lt;/span&gt;</p>
+<p class="p1">&lt;span class="text-sm font-medium"&gt;system_bot&lt;/span&gt;</p>
+<p class="p1">&lt;/a&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex-shrink-0 mt-auto border-t border-electric-purple/30 pt-4"&gt;</p>
+<p class="p1">&lt;div class="flex items-center gap-3"&gt;</p>
+<p class="p1">&lt;div class="relative"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-neon-cyan shadow-glow-cyan" data-alt="User avatar with a glowing cyan border" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBlEMqQiLAiviLfmUHt-IktMnOReykUlXqBVLqPjKdmIAeCNHbCO66OVy182qUw8K26w9OuUJxdAlU7gMeWg3d-TMQ7E8p98gYcUyG_Jx1iKbQiXCPgHmtDlYwRC8eD8AyhTXEEYczjwdE7INcwH7skWwvzOav_KN3eCO4pS18irwGPVn4k1DE4jEtQ3CeU2AJILjqx3jodC-z5qF2jHh7PshzBvXLx1Y4niGSldGrtrsgaVUhTzA9qWOo0zF2GRrpKhg96gaXY93x9");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="absolute bottom-0 right-0 size-3 bg-neon-cyan rounded-full border-2 border-deep-dark shadow-glow-cyan"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-col"&gt;</p>
+<p class="p1">&lt;h1 class="text-white text-base font-medium leading-normal"&gt;K.Flynn&lt;/h1&gt;</p>
+<p class="p1">&lt;p class="text-neon-cyan/80 text-sm font-normal leading-normal"&gt;Online&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;button class="ml-auto p-2 text-gray-400 hover:text-white transition-colors duration-200"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;settings&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/aside&gt;</p>
+<p class="p1">&lt;!-- Main Content Area --&gt;</p>
+<p class="p1">&lt;main class="flex flex-1 flex-col h-screen"&gt;</p>
+<p class="p1">&lt;!-- Header --&gt;</p>
+<p class="p1">&lt;header class="flex items-center justify-between gap-2 px-6 py-3 border-b border-electric-purple/30 shadow-glow-purple flex-shrink-0"&gt;</p>
+<p class="p1">&lt;!-- PageHeading --&gt;</p>
+<p class="p1">&lt;div class="flex min-w-72 flex-col gap-1"&gt;</p>
+<p class="p1">&lt;p class="text-white tracking-wide text-2xl font-bold leading-tight flex items-center gap-2"&gt;</p>
+<p class="p1">&lt;span class="text-neon-cyan"&gt;#&lt;/span&gt;design</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/p&gt;</p>
+<p class="p1">&lt;p class="text-gray-400 text-sm font-normal leading-normal"&gt;All things related to UI/UX and visual identity.&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- ToolBar --&gt;</p>
+<p class="p1">&lt;div class="flex gap-2"&gt;</p>
+<p class="p1">&lt;button class="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200 hover:animate-pulse"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;search&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;button class="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200 hover:animate-pulse"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;call&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;button class="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200 hover:animate-pulse"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;info&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/header&gt;</p>
+<p class="p1">&lt;!-- Message Feed --&gt;</p>
+<p class="p1">&lt;div class="flex-1 flex flex-col overflow-y-auto grid-bg p-6"&gt;</p>
+<p class="p1">&lt;div class="space-y-6"&gt;</p>
+<p class="p1">&lt;!-- SingleMessage 1 --&gt;</p>
+<p class="p1">&lt;div class="flex gap-4"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 flex-shrink-0" data-alt="User avatar for Max Headroom" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDpbYRfn7XPjaUnhBqF45rQFq-6JeNFw63yXDvtlpxilpD0suHgSectLgfDqsijIDqNZJSXVULisYN9IbGU1uMFbgOyUd1A5FbuM5vpUXYHn6aj5uyFQjZJLmLgzK8CqLctvwDRQNJGjx09WqjqK87g1LXlIZmKP6ZDq72-yfHkw8LkrBS2BTAmFTGdsdvuppishH_XE2joJP3veqgccu9PQSXr8tOcP9zTPZunu3XhO-V3DRJPMUjdTcrY2c4UUXi68k6Pl0BFhB-v");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-1 flex-col items-stretch gap-1"&gt;</p>
+<p class="p1">&lt;div class="flex flex-wrap items-baseline gap-x-3 gap-y-1"&gt;</p>
+<p class="p1">&lt;p class="text-hot-magenta text-base font-bold leading-tight"&gt;Max Headroom&lt;/p&gt;</p>
+<p class="p1">&lt;p class="text-gray-500 text-xs font-normal leading-normal"&gt;10:32 AM&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;p class="text-gray-200 text-base font-normal leading-relaxed"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>Hey team, check out this new design concept. It's got that retro-futuristic vibe we were talking about.</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- SingleMessage 2 --&gt;</p>
+<p class="p1">&lt;div class="flex gap-4"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 flex-shrink-0" data-alt="User avatar for Flynn" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB51ogRANi0Oqy9b4EXO-_2G0XV5FjrSs4uXi5DfpaHhiJtuSuh87sDfcwG5x90WZCyrYz5oqboP943AWzlVOPV7sem5eoMbSllFc7nPJImtl6vr9RNxrM8hNT8wPdWgSPerhCIPkcwss1u6r5QampyDEyRFplF71xZyCpUbnIgyq0-MlLEY-4FT8QIgg1pm6qu1tlHTVfUUjEkiY3GIn7I7raz1L5o9FiVOkZN53IDSLKtg39ew8212ay2bk4FQ04Ss5dpcet-WkKh");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-1 flex-col items-stretch gap-1"&gt;</p>
+<p class="p1">&lt;div class="flex flex-wrap items-baseline gap-x-3 gap-y-1"&gt;</p>
+<p class="p1">&lt;p class="text-neon-cyan text-base font-bold leading-tight"&gt;Flynn&lt;/p&gt;</p>
+<p class="p1">&lt;p class="text-gray-500 text-xs font-normal leading-normal"&gt;10:33 AM&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;p class="text-gray-200 text-base font-normal leading-relaxed"&gt;Looks great! The neon accents are perfect. Did you try a version with a &lt;span class="text-hot-magenta font-semibold"&gt;magenta&lt;/span&gt; highlight?&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- SingleMessage 3 --&gt;</p>
+<p class="p1">&lt;div class="flex gap-4"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 flex-shrink-0" data-alt="User avatar for Sarah Connor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeyewkKBGbLKlarvwfcLj2MMHakjyZQ2E5j-cDrZQdZ6b9MmrUcIHDh8H9-HJGuaxkXXcEPHRi1S06PoTfSRzh59osiJA9RfkyGUCUAsdUQDOXJg8akPaarDTPwDbitll3buEWZhzNl3uRKvc583ODROJnK5dD_wzrtqd4ThdQGuWuzO9XpqNgr76qL7c2CYWnLzY5niQsvbwL8pDUN17DPhaejuc3iWZru6hHGHG8e9FNX76du0NtoXF40gf2hWpHJhAGu3Iao17H");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-1 flex-col items-stretch gap-1"&gt;</p>
+<p class="p1">&lt;div class="flex flex-wrap items-baseline gap-x-3 gap-y-1"&gt;</p>
+<p class="p1">&lt;p class="text-hot-magenta text-base font-bold leading-tight"&gt;Sarah Connor&lt;/p&gt;</p>
+<p class="p1">&lt;p class="text-gray-500 text-xs font-normal leading-normal"&gt;10:35 AM&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;p class="text-gray-200 text-base font-normal leading-relaxed"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>I'm on it. Pushing a new commit with the magenta variant now. Stand by.</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- System Message --&gt;</p>
+<p class="p1">&lt;div class="flex items-center gap-3 py-2"&gt;</p>
+<p class="p1">&lt;div class="h-px flex-1 bg-electric-purple/20"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;p class="text-electric-purple text-sm"&gt;User J. Doe has joined the channel&lt;/p&gt;</p>
+<p class="p1">&lt;div class="h-px flex-1 bg-electric-purple/20"&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- SingleMessage 4 with code block --&gt;</p>
+<p class="p1">&lt;div class="flex gap-4"&gt;</p>
+<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 flex-shrink-0" data-alt="User avatar for Sarah Connor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXZEl2jvfORUAiJtycNi9pDBZKNU1i-vvYnPlJo5I5-E5QhNjH3bKGpXQnjdA5DGvbF_mXObfyVCCB0tBoqyUQJLdWB_0vYKto_J2ABIMIK6O2LULwNfNfZahN3PJcZYniNyMCfYRzEwAndCLWKwq6lOUPy_LgL0WpDjBB_SyBQt21QXE7YI7TEvNjuuHNgEc74_PDnSn_nEOn9oon3xv7rZVq42ND3qtc8ueLGbDtE1EauLflCCAtqVSjGhOPIWULfM3gJpASJ2sJ");'&gt;&lt;/div&gt;</p>
+<p class="p1">&lt;div class="flex flex-1 flex-col items-stretch gap-2"&gt;</p>
+<p class="p1">&lt;div class="flex flex-wrap items-baseline gap-x-3 gap-y-1"&gt;</p>
+<p class="p1">&lt;p class="text-hot-magenta text-base font-bold leading-tight"&gt;Sarah Connor&lt;/p&gt;</p>
+<p class="p1">&lt;p class="text-gray-500 text-xs font-normal leading-normal"&gt;10:38 AM&lt;/p&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;p class="text-gray-200 text-base font-normal leading-relaxed"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>Here's the CSS for the new highlight:</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/p&gt;</p>
+<p class="p1">&lt;div class="bg-black/50 border border-electric-purple/50 rounded-lg p-4 font-mono text-sm"&gt;</p>
+<p class="p1">&lt;pre&gt;&lt;code class="language-css"&gt;&lt;span class="text-gray-500"&gt;.highlight {&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;span class="text-neon-cyan"&gt;color&lt;/span&gt;: &lt;span class="text-hot-magenta"&gt;#FF00F7&lt;/span&gt;;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;span class="text-neon-cyan"&gt;text-shadow&lt;/span&gt;: &lt;span class="text-gray-300"&gt;0 0 5px #FF00F7&lt;/span&gt;;</p>
+<p class="p1">&lt;span class="text-gray-500"&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;!-- Message Input --&gt;</p>
+<p class="p1">&lt;div class="px-6 py-4 mt-auto flex-shrink-0"&gt;</p>
+<p class="p1">&lt;div class="relative"&gt;</p>
+<p class="p1">&lt;input class="w-full bg-black/50 border border-electric-purple/50 rounded-lg py-3 pl-5 pr-36 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:border-transparent transition-all duration-200 shadow-inner" placeholder="Message #design" style="box-shadow: inset 0 2px 4px 0 rgba(157, 0, 255, 0.1);" type="text"/&gt;</p>
+<p class="p1">&lt;div class="absolute inset-y-0 right-0 flex items-center pr-3 gap-1"&gt;</p>
+<p class="p1">&lt;button class="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;add_circle&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;button class="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;sentiment_satisfied&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;button class="p-2 text-white bg-neon-cyan rounded-md hover:bg-white hover:text-neon-cyan transition-colors duration-200 shadow-glow-cyan"&gt;</p>
+<p class="p1">&lt;span class="material-symbols-outlined"&gt;send&lt;/span&gt;</p>
+<p class="p1">&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/main&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p1">&lt;/body&gt;&lt;/html&gt;</p>
+</body>
+</html>

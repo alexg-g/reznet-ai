@@ -19,6 +19,21 @@
 .DS_Store
 *.pem
 
+# macOS
+.AppleDouble
+.LSOverride
+._*
+
+# Certificates and keys
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*_rsa
+*_rsa.pub
+*.pem
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -34,3 +49,43 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+
+# Local data
+/data/
+/data/postgres/
+/data/redis/
+/data/workspaces/
+/data/uploads/
+/data/agent-memory/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/

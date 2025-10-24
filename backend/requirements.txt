@@ -1,0 +1,56 @@
+# Core FastAPI
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+python-dotenv==1.0.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.27
+psycopg2-binary==2.9.9
+alembic==1.13.1
+pgvector==0.2.5
+
+# Redis
+redis==5.0.1
+hiredis==2.3.2
+
+# WebSocket
+python-socketio==5.11.1
+python-engineio==4.9.0
+websockets==12.0
+
+# AI/LLM Providers
+anthropic==0.18.1
+openai>=1.13.3,<2.0.0
+# For Ollama support
+httpx==0.26.0
+
+# CrewAI for agent orchestration
+crewai==0.30.0
+crewai-tools==0.2.3
+
+# Background tasks
+celery==5.3.6
+
+# Utilities
+aiohttp==3.9.3
+aiofiles==23.2.1
+python-multipart==0.0.9
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Logging and monitoring
+loguru==0.7.2
+
+# Testing
+pytest>=8.0.0,<9.0.0
+pytest-asyncio>=0.23.5
+httpx==0.26.0
+
+# Type checking
+mypy==1.8.0
+
+# Code quality
+black==24.1.1
+ruff==0.2.1
