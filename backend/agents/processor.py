@@ -32,6 +32,38 @@ AGENT_CLASSES = {
 _agent_cache: Dict[UUID, Any] = {}
 
 
+def clear_agent_cache():
+    """
+    Clear the agent cache.
+    This is called on application startup to ensure fresh agent instances
+    with valid HTTP client connections after hot-reload.
+    """
+    global _agent_cache
+    logger.info(f"Clearing agent cache ({len(_agent_cache)} agents)")
+    _agent_cache.clear()
+
+
+async def cleanup_agent_cache():
+    """
+    Cleanup all cached agents, closing their HTTP clients properly.
+    This is called on application shutdown.
+    """
+    global _agent_cache
+    logger.info(f"Cleaning up agent cache ({len(_agent_cache)} agents)")
+
+    for agent_id, agent in _agent_cache.items():
+        try:
+            # Close httpx client if it exists (for Ollama)
+            if hasattr(agent, 'llm') and hasattr(agent.llm, 'client'):
+                if hasattr(agent.llm.client, 'aclose'):
+                    await agent.llm.client.aclose()
+                    logger.debug(f"Closed HTTP client for agent {agent.name}")
+        except Exception as e:
+            logger.warning(f"Error closing client for agent {agent_id}: {e}")
+
+    _agent_cache.clear()
+
+
 def get_agent_instance(agent_record: Agent) -> Any:
     """
     Get or create agent instance from database record
@@ -140,7 +172,7 @@ async def process_agent_message(
                     'author_name': agent_message.author_name,
                     'content': agent_message.content,
                     'created_at': agent_message.created_at.isoformat(),
-                    'metadata': agent_message.metadata
+                    'metadata': agent_message.msg_metadata
                 })
 
                 # Update agent status back to online
@@ -172,7 +204,7 @@ async def process_agent_message(
                     'author_name': error_message.author_name,
                     'content': error_message.content,
                     'created_at': error_message.created_at.isoformat(),
-                    'metadata': error_message.metadata
+                    'metadata': error_message.msg_metadata
                 })
 
                 # Update status to online
@@ -240,7 +272,7 @@ async def invoke_agent(
                 'author_name': agent_message.author_name,
                 'content': agent_message.content,
                 'created_at': agent_message.created_at.isoformat(),
-                'metadata': agent_message.metadata
+                'metadata': agent_message.msg_metadata
             }
 
         return {

@@ -107,3 +107,77 @@ class AgentMemory(Base):
 
     # Relationships
     agent = relationship("Agent", back_populates="memories")
+
+
+class Workflow(Base):
+    """Multi-agent workflow model"""
+    __tablename__ = "workflows"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Workflow metadata
+    description = Column(Text, nullable=False)  # User's original request
+    orchestrator_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"))
+    channel_id = Column(UUID(as_uuid=True), ForeignKey("channels.id"))
+
+    # State
+    status = Column(String(50), default="planning")
+    # Status: planning, executing, completed, failed, cancelled
+
+    # Plan and results
+    plan = Column(JSONB, nullable=True)
+    # Stores structured task breakdown from orchestrator
+
+    results = Column(JSONB, nullable=True)
+    # Stores aggregated results from all tasks
+
+    # Metadata
+    error = Column(Text, nullable=True)  # Error message if failed
+    workflow_metadata = Column("metadata", JSONB, default={})
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    orchestrator = relationship("Agent", foreign_keys=[orchestrator_id])
+    channel = relationship("Channel")
+    workflow_tasks = relationship("WorkflowTask", back_populates="workflow",
+                                   cascade="all, delete-orphan")
+
+
+class WorkflowTask(Base):
+    """Individual task within a workflow"""
+    __tablename__ = "workflow_tasks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"))
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
+
+    # Task definition
+    description = Column(Text, nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"))
+    order_index = Column(Integer, nullable=False)  # Execution order
+
+    # Dependencies
+    depends_on = Column(JSONB, default=[])  # Array of workflow_task IDs this depends on
+
+    # State
+    status = Column(String(50), default="pending")
+    # Status: pending, ready, in_progress, completed, failed, skipped
+
+    # Results
+    output = Column(JSONB, nullable=True)
+    error = Column(Text, nullable=True)
+    task_metadata = Column("metadata", JSONB, default={})
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    workflow = relationship("Workflow", back_populates="workflow_tasks")
+    agent = relationship("Agent")
+    task = relationship("Task")  # Links to existing Task model if needed

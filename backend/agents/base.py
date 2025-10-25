@@ -32,11 +32,25 @@ class BaseAgent(ABC):
         self.persona = persona
         self.config = config or {}
 
-        # Initialize LLM client
-        self.llm = LLMClient(
-            provider=self.config.get("provider", settings.DEFAULT_LLM_PROVIDER),
-            model=self.config.get("model", None)
-        )
+        # Initialize LLM client with dynamic provider/model selection
+        # Allow per-agent override, otherwise use global defaults
+        provider = self.config.get("provider", settings.DEFAULT_LLM_PROVIDER)
+
+        # Get model - if not specified in agent config, use provider's default
+        if "model" in self.config:
+            model = self.config["model"]
+        else:
+            # Use provider-specific default model from settings
+            if provider == "anthropic":
+                model = settings.ANTHROPIC_DEFAULT_MODEL
+            elif provider == "openai":
+                model = settings.OPENAI_DEFAULT_MODEL
+            elif provider == "ollama":
+                model = settings.OLLAMA_DEFAULT_MODEL
+            else:
+                model = None
+
+        self.llm = LLMClient(provider=provider, model=model)
 
         # Agent configuration
         self.temperature = self.config.get("temperature", settings.DEFAULT_TEMPERATURE)
@@ -46,7 +60,7 @@ class BaseAgent(ABC):
         self.status = "online"
         self.current_task = None
 
-        logger.info(f"Initialized agent: {self.name} ({self.agent_type})")
+        logger.info(f"Initialized agent: {self.name} ({self.agent_type}) | Provider: {provider} | Model: {model}")
 
     def get_system_prompt(self) -> str:
         """

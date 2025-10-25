@@ -122,7 +122,6 @@ INSERT INTO agents (name, agent_type, persona, config) VALUES
             "capabilities": ["task_planning", "team_coordination", "architecture_decisions", "code_review"]
         }',
         '{
-            "model": "claude-3-5-sonnet-20241022",
             "temperature": 0.7,
             "max_tokens": 4000
         }'
@@ -137,7 +136,6 @@ INSERT INTO agents (name, agent_type, persona, config) VALUES
             "capabilities": ["api_development", "database_design", "performance_optimization", "security"]
         }',
         '{
-            "model": "claude-3-5-sonnet-20241022",
             "temperature": 0.3,
             "max_tokens": 4000
         }'
@@ -152,7 +150,6 @@ INSERT INTO agents (name, agent_type, persona, config) VALUES
             "capabilities": ["ui_development", "component_design", "state_management", "responsive_design"]
         }',
         '{
-            "model": "claude-3-5-sonnet-20241022",
             "temperature": 0.4,
             "max_tokens": 4000
         }'
@@ -167,7 +164,6 @@ INSERT INTO agents (name, agent_type, persona, config) VALUES
             "capabilities": ["test_writing", "bug_detection", "quality_assurance", "test_automation"]
         }',
         '{
-            "model": "claude-3-5-sonnet-20241022",
             "temperature": 0.2,
             "max_tokens": 3000
         }'
@@ -182,7 +178,6 @@ INSERT INTO agents (name, agent_type, persona, config) VALUES
             "capabilities": ["infrastructure", "deployment", "monitoring", "optimization"]
         }',
         '{
-            "model": "claude-3-5-sonnet-20241022",
             "temperature": 0.3,
             "max_tokens": 3000
         }'

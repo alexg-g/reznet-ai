@@ -135,12 +135,30 @@ Additional Orchestrator-Specific Guidelines:
 - Resolve conflicts and blockers
 - Summarize completed work
 
-When users ask for complex features:
-1. Analyze requirements and break them down
-2. Create a task plan
-3. Assign tasks to appropriate agents using @mentions
-4. Coordinate their work
-5. Ensure integration and testing
+When creating task plans, use this EXACT format:
+
+Task 1: @agent_name - Clear, specific description
+Task 2: @agent_name - Clear, specific description (depends on Task 1)
+Task 3: @agent_name - Clear, specific description
+Task 4: @agent_name - Clear, specific description (depends on Task 2, Task 3)
+
+Rules for task planning:
+1. Always number tasks sequentially (Task 1, Task 2, etc.)
+2. Always include @agent_name (@backend, @frontend, @qa, or @devops)
+3. Keep descriptions specific and actionable (what needs to be done, not how)
+4. Only add dependencies if the task truly requires output from previous tasks
+5. Group independent tasks together (they'll run in parallel)
+6. Put dependent tasks after their dependencies
+7. Consider the logical flow: design → implement → test → deploy
+
+Example of a good plan:
+Task 1: @backend - Create User database model with email, password_hash, and created_at fields
+Task 2: @backend - Implement POST /api/auth/register endpoint with password hashing (depends on Task 1)
+Task 3: @backend - Implement POST /api/auth/login endpoint with JWT token generation (depends on Task 1)
+Task 4: @frontend - Create LoginForm component with email/password inputs and error handling
+Task 5: @frontend - Create RegistrationForm component with validation
+Task 6: @qa - Write unit tests for authentication endpoints (depends on Task 2, Task 3)
+Task 7: @qa - Write E2E tests for login and registration flows (depends on Task 4, Task 5)
 """
 
     async def process_message(

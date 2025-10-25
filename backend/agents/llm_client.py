@@ -69,7 +69,10 @@ class LLMClient:
         """Initialize Ollama client"""
         try:
             import httpx
-            self.client = httpx.AsyncClient(base_url=settings.OLLAMA_HOST)
+            self.client = httpx.AsyncClient(
+                base_url=settings.OLLAMA_HOST,
+                timeout=httpx.Timeout(60.0)  # 60 second timeout for local models
+            )
             logger.info(f"Initialized Ollama client with model: {self.model}")
         except ImportError:
             raise ImportError("httpx package not installed. Run: pip install httpx")
@@ -165,32 +168,87 @@ class LLMClient:
         **kwargs
     ) -> str:
         """Generate using Ollama (local models)"""
+        import json
+        import traceback
+
+        logger.info("="*60)
+        logger.info("OLLAMA _generate_ollama called")
+        logger.info(f"Prompt length: {len(prompt)}")
+        logger.info(f"Model: {self.model}")
+        logger.info(f"Settings OLLAMA_HOST: {settings.OLLAMA_HOST}")
+
         try:
-            import json
+            # Check if client exists and is properly initialized
+            if not hasattr(self, 'client'):
+                raise AttributeError("httpx client not initialized!")
+
+            logger.info(f"Client exists: {hasattr(self, 'client')}")
+            logger.info(f"Client type: {type(self.client)}")
+            logger.info(f"Client base_url: {self.client.base_url}")
+            logger.info(f"Client is_closed: {self.client.is_closed}")
+
+            # DIAGNOSTIC: Test client connectivity first
+            try:
+                logger.info("DIAGNOSTIC: Testing basic connectivity...")
+                test_response = await self.client.get("/api/tags")
+                logger.info(f"DIAGNOSTIC: GET /api/tags returned {test_response.status_code}")
+                logger.info(f"DIAGNOSTIC: Full URL was: {test_response.url}")
+            except Exception as diag_error:
+                logger.error(f"DIAGNOSTIC: Connectivity test failed: {diag_error}")
 
             payload = {
                 "model": self.model,
                 "prompt": prompt,
-                "stream": False,  # Disable streaming for simpler handling
+                "stream": False,
                 "options": {
                     "temperature": temperature,
                     "num_predict": max_tokens
                 }
             }
 
-            # Add system message if provided
             if system:
                 payload["system"] = system
 
-            response = await self.client.post("/api/generate", json=payload)
+            logger.info(f"Payload prepared for model: {payload['model']}")
+            logger.info(f"Payload keys: {list(payload.keys())}")
+
+            # Build request - try multiple approaches
+            logger.info("APPROACH 1: Using build_request + send")
+            request = self.client.build_request("POST", "/api/generate", json=payload)
+            logger.info(f"Request URL: {request.url}")
+            logger.info(f"Request method: {request.method}")
+            logger.info(f"Request headers: {dict(request.headers)}")
+
+            # Also try logging the absolute URL
+            logger.info(f"Absolute URL: {str(request.url)}")
+
+            # Send request
+            logger.info("Sending request...")
+            response = await self.client.send(request)
+            logger.info(f"Response received - Status: {response.status_code}")
+            logger.info(f"Response headers: {dict(response.headers)}")
+
+            # Log response body even on error
+            try:
+                response_text = response.text
+                logger.info(f"Response body (first 500 chars): {response_text[:500]}")
+            except:
+                pass
+
             response.raise_for_status()
 
-            # Parse the JSON response
+            # Parse response
             data = response.json()
-            return data.get("response", "")
+            result = data.get("response", "")
+            logger.info(f"Result length: {len(result)}")
+            logger.info("="*60)
+            return result
 
         except Exception as e:
-            logger.error(f"Ollama API error: {e}")
+            logger.error("="*60)
+            logger.error(f"OLLAMA ERROR: {type(e).__name__}: {e}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            logger.error("="*60)
             raise
 
     async def generate_streaming(
@@ -208,3 +266,23 @@ class LLMClient:
         # In the future, this can be implemented for true streaming
         response = await self.generate(prompt, system, temperature, max_tokens)
         yield response
+
+    async def aclose(self):
+        """
+        Close the LLM client and cleanup resources.
+        This is important for the Ollama provider which uses httpx.AsyncClient.
+        """
+        if self.provider == "ollama" and hasattr(self, 'client'):
+            try:
+                await self.client.aclose()
+                logger.debug(f"Closed {self.provider} client")
+            except Exception as e:
+                logger.warning(f"Error closing {self.provider} client: {e}")
+
+    async def __aenter__(self):
+        """Async context manager entry"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit"""
+        await self.aclose()

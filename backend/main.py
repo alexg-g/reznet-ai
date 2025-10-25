@@ -10,7 +10,8 @@ import os
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 
-from routers import channels, agents, tasks
+from routers import channels, agents, tasks, workflows
+from websocket import manager as websocket_manager  # Import full module to register event handlers
 from websocket.manager import socket_app
 from core.database import engine, Base
 from core.config import settings
@@ -23,14 +24,49 @@ load_dotenv()
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
+    import datetime
+    startup_time = datetime.datetime.now().isoformat()
     print("🚀 Starting RezNet AI...")
+    print(f"⏰ Startup Time: {startup_time}")
     print(f"📊 Database: {settings.DATABASE_URL[:50]}...")
-    print(f"🤖 Default LLM: {settings.DEFAULT_LLM_PROVIDER}")
-    print(f"🔧 Debug mode: {settings.DEBUG}")
+
+    # LLM Provider Information
+    print(f"\n🤖 LLM Provider: {settings.DEFAULT_LLM_PROVIDER}")
+
+    if settings.DEFAULT_LLM_PROVIDER == "anthropic":
+        print(f"   └─ Model: {settings.ANTHROPIC_DEFAULT_MODEL}")
+    elif settings.DEFAULT_LLM_PROVIDER == "openai":
+        print(f"   └─ Model: {settings.OPENAI_DEFAULT_MODEL}")
+    elif settings.DEFAULT_LLM_PROVIDER == "ollama":
+        print(f"   └─ Model: {settings.OLLAMA_DEFAULT_MODEL}")
+        print(f"   └─ Host: {settings.OLLAMA_HOST}")
+
+    # Show all configured providers
+    print(f"\n🔧 Available Providers:")
+    if settings.ANTHROPIC_API_KEY:
+        indicator = "✓" if settings.DEFAULT_LLM_PROVIDER == "anthropic" else " "
+        print(f"   [{indicator}] Anthropic (Claude) - {settings.ANTHROPIC_DEFAULT_MODEL}")
+    if settings.OPENAI_API_KEY:
+        indicator = "✓" if settings.DEFAULT_LLM_PROVIDER == "openai" else " "
+        print(f"   [{indicator}] OpenAI (GPT) - {settings.OPENAI_DEFAULT_MODEL}")
+    if settings.USE_OLLAMA:
+        indicator = "✓" if settings.DEFAULT_LLM_PROVIDER == "ollama" else " "
+        print(f"   [{indicator}] Ollama (Local) - {settings.OLLAMA_DEFAULT_MODEL}")
+
+    print(f"\n🔧 Debug mode: {settings.DEBUG}")
+
+    # Clear agent cache to ensure fresh instances with valid HTTP clients
+    # This is critical for hot-reload scenarios where httpx.AsyncClient
+    # connections become stale
+    from agents.processor import clear_agent_cache
+    clear_agent_cache()
+    print("🔄 Agent cache cleared (agents will use current LLM provider)")
 
     yield
 
     # Shutdown
+    from agents.processor import cleanup_agent_cache
+    await cleanup_agent_cache()
     print("👋 Shutting down RezNet AI...")
 
 
@@ -58,6 +94,7 @@ app.mount("/socket.io", socket_app)
 app.include_router(channels.router, prefix="/api", tags=["channels"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
+app.include_router(workflows.router, prefix="/api", tags=["workflows"])
 
 
 # Health check endpoint
@@ -119,6 +156,155 @@ async def reset_database():
     return {
         "message": "Database reset not implemented. Use ./scripts/reset.sh instead",
         "hint": "Run: docker-compose down -v && docker-compose up -d"
+    }
+
+
+# LLM Configuration endpoint
+@app.get("/api/llm-config")
+async def get_llm_config():
+    """
+    Get current LLM provider configuration
+    Returns information about configured providers and which one is active
+    """
+    return {
+        "current_provider": settings.DEFAULT_LLM_PROVIDER,
+        "providers": {
+            "anthropic": {
+                "available": bool(settings.ANTHROPIC_API_KEY),
+                "default_model": settings.ANTHROPIC_DEFAULT_MODEL,
+                "configured": bool(settings.ANTHROPIC_API_KEY)
+            },
+            "openai": {
+                "available": bool(settings.OPENAI_API_KEY),
+                "default_model": settings.OPENAI_DEFAULT_MODEL,
+                "configured": bool(settings.OPENAI_API_KEY)
+            },
+            "ollama": {
+                "available": settings.USE_OLLAMA,
+                "default_model": settings.OLLAMA_DEFAULT_MODEL,
+                "host": settings.OLLAMA_HOST,
+                "configured": settings.USE_OLLAMA
+            }
+        },
+        "note": "All agents will use the current_provider unless they have a per-agent override in their config"
+    }
+
+
+# Diagnostic endpoint for Ollama (dev only)
+@app.get("/api/diagnostic/ollama")
+async def diagnostic_ollama():
+    """Test Ollama connectivity from FastAPI context (development only)"""
+    if not settings.DEBUG:
+        return JSONResponse(
+            status_code=403,
+            content={"error": "Diagnostic endpoints only available in debug mode"}
+        )
+
+    import httpx
+    import logging
+    logger = logging.getLogger(__name__)
+
+    results = {}
+
+    # Test 1: Direct httpx call with full URL
+    try:
+        logger.info("DIAGNOSTIC TEST 1: Direct POST with full URL")
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.OLLAMA_HOST}/api/generate",
+                json={"model": settings.OLLAMA_DEFAULT_MODEL, "prompt": "Hello", "stream": False},
+                timeout=30.0
+            )
+            results["test1_direct_full_url"] = {
+                "status": response.status_code,
+                "success": response.status_code == 200,
+                "url": str(response.url),
+                "response_preview": response.text[:200] if response.status_code == 200 else response.text
+            }
+    except Exception as e:
+        results["test1_direct_full_url"] = {
+            "error": str(e),
+            "type": type(e).__name__
+        }
+
+    # Test 2: httpx with base_url (like LLMClient)
+    try:
+        logger.info("DIAGNOSTIC TEST 2: Using base_url pattern")
+        async with httpx.AsyncClient(base_url=settings.OLLAMA_HOST, timeout=httpx.Timeout(30.0)) as client:
+            response = await client.post(
+                "/api/generate",
+                json={"model": settings.OLLAMA_DEFAULT_MODEL, "prompt": "Hello", "stream": False}
+            )
+            results["test2_base_url"] = {
+                "status": response.status_code,
+                "success": response.status_code == 200,
+                "url": str(response.url),
+                "base_url": settings.OLLAMA_HOST,
+                "response_preview": response.text[:200] if response.status_code == 200 else response.text
+            }
+    except Exception as e:
+        results["test2_base_url"] = {
+            "error": str(e),
+            "type": type(e).__name__
+        }
+
+    # Test 3: build_request + send (exact LLMClient pattern)
+    try:
+        logger.info("DIAGNOSTIC TEST 3: build_request + send pattern")
+        client = httpx.AsyncClient(base_url=settings.OLLAMA_HOST, timeout=httpx.Timeout(30.0))
+        request = client.build_request(
+            "POST",
+            "/api/generate",
+            json={"model": settings.OLLAMA_DEFAULT_MODEL, "prompt": "Hello", "stream": False}
+        )
+        logger.info(f"DIAGNOSTIC: Built request URL: {request.url}")
+        response = await client.send(request)
+        await client.aclose()
+
+        results["test3_build_send"] = {
+            "status": response.status_code,
+            "success": response.status_code == 200,
+            "url": str(response.url),
+            "method": request.method,
+            "headers": dict(request.headers),
+            "response_preview": response.text[:200] if response.status_code == 200 else response.text
+        }
+    except Exception as e:
+        results["test3_build_send"] = {
+            "error": str(e),
+            "type": type(e).__name__
+        }
+        if 'client' in locals():
+            try:
+                await client.aclose()
+            except:
+                pass
+
+    # Test 4: Test through LLMClient directly
+    try:
+        logger.info("DIAGNOSTIC TEST 4: Through LLMClient")
+        from agents.llm_client import LLMClient
+        llm = LLMClient(provider="ollama", model=settings.OLLAMA_DEFAULT_MODEL)
+        response = await llm.generate(prompt="Hello, this is a test", system="You are a helpful assistant")
+        results["test4_llm_client"] = {
+            "success": True,
+            "response_length": len(response),
+            "response_preview": response[:200]
+        }
+    except Exception as e:
+        results["test4_llm_client"] = {
+            "error": str(e),
+            "type": type(e).__name__
+        }
+
+    return {
+        "ollama_config": {
+            "host": settings.OLLAMA_HOST,
+            "model": settings.OLLAMA_DEFAULT_MODEL,
+            "use_ollama": settings.USE_OLLAMA,
+            "default_provider": settings.DEFAULT_LLM_PROVIDER
+        },
+        "tests": results
     }
 
 
