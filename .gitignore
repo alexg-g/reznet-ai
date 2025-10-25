@@ -94,3 +94,7 @@ logs/
 
 # Project documentation (AI assistant context)
 CLAUDE.md
+
+# Development test scripts
+test_*.py
+*_debug.py
