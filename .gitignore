@@ -91,3 +91,6 @@ build/
 # Logs
 *.log
 logs/
+
+# Project documentation (AI assistant context)
+CLAUDE.md
