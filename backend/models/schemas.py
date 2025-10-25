@@ -54,11 +54,12 @@ class MessageResponse(BaseModel):
     author_name: Optional[str]
     content: str
     thread_id: Optional[UUID]
-    metadata: Dict[str, Any] = {}
+    msg_metadata: Dict[str, Any] = Field(default={}, serialization_alias='metadata')
     created_at: datetime
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 # ============================================
@@ -140,6 +141,80 @@ class TaskResponse(TaskBase):
 
 
 # ============================================
+# Workflow Schemas
+# ============================================
+
+class WorkflowTaskBase(BaseModel):
+    description: str = Field(..., min_length=1)
+    agent_id: UUID
+    order_index: int = Field(..., ge=0)
+    depends_on: List[UUID] = []
+
+
+class WorkflowTaskCreate(WorkflowTaskBase):
+    pass
+
+
+class WorkflowTaskResponse(WorkflowTaskBase):
+    id: UUID
+    workflow_id: UUID
+    task_id: Optional[UUID]
+    status: str  # pending, ready, in_progress, completed, failed, skipped
+    output: Optional[Dict[str, Any]]
+    error: Optional[str]
+    task_metadata: Dict[str, Any] = {}
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class WorkflowBase(BaseModel):
+    description: str = Field(..., min_length=1)
+
+
+class WorkflowCreate(WorkflowBase):
+    orchestrator_id: UUID
+    channel_id: UUID
+
+
+class WorkflowPlanRequest(BaseModel):
+    """Request for orchestrator to create a workflow plan"""
+    user_request: str = Field(..., min_length=1)
+    channel_id: UUID
+    context: Dict[str, Any] = {}
+
+
+class WorkflowResponse(WorkflowBase):
+    id: UUID
+    orchestrator_id: UUID
+    channel_id: UUID
+    status: str  # planning, executing, completed, failed, cancelled
+    plan: Optional[Dict[str, Any]]
+    results: Optional[Dict[str, Any]]
+    error: Optional[str]
+    workflow_metadata: Dict[str, Any] = {}
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    workflow_tasks: List[WorkflowTaskResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class WorkflowProgressUpdate(BaseModel):
+    """Real-time workflow progress update"""
+    workflow_id: UUID
+    completed_tasks: int
+    total_tasks: int
+    percent_complete: float
+    current_task: Optional[str] = None
+
+
+# ============================================
 # WebSocket Schemas
 # ============================================
 
@@ -156,6 +231,19 @@ class WSMessageType:
     AGENT_THINKING = "agent:thinking"
     TASK_PROGRESS = "task:progress"
     ERROR = "error"
+
+    # Workflow events
+    WORKFLOW_CREATED = "workflow:created"
+    WORKFLOW_PLANNING = "workflow:planning"
+    WORKFLOW_PLAN_READY = "workflow:plan_ready"
+    WORKFLOW_STARTED = "workflow:started"
+    WORKFLOW_PROGRESS = "workflow:progress"
+    WORKFLOW_TASK_STARTED = "workflow:task_started"
+    WORKFLOW_TASK_COMPLETED = "workflow:task_completed"
+    WORKFLOW_TASK_FAILED = "workflow:task_failed"
+    WORKFLOW_COMPLETED = "workflow:completed"
+    WORKFLOW_FAILED = "workflow:failed"
+    WORKFLOW_CANCELLED = "workflow:cancelled"
 
 
 class WSMessage(BaseModel):

@@ -46,8 +46,9 @@ class ConnectionManager:
             logger.info(f"Client disconnected: {sid} (User: {user_id})")
 
     async def broadcast(self, event: str, data: Dict):
-        """Broadcast message to all connected clients"""
-        await sio.emit(event, data)
+        """Broadcast message to all connected clients on all namespaces"""
+        await sio.emit(event, data, namespace='/')
+        await sio.emit(event, data, namespace='/ws')
 
     async def send_to_user(self, user_id: str, event: str, data: Dict):
         """Send message to specific user"""
@@ -84,10 +85,9 @@ async def disconnect(sid):
     await manager.disconnect(sid)
 
 
-@sio.event
-async def message_send(sid, data):
+async def _handle_message_send(sid, data, namespace='/'):
     """
-    Handle incoming message from client
+    Shared message handling logic for all namespaces
     Expected data: {
         'channel_id': str,
         'content': str,
@@ -112,22 +112,27 @@ async def message_send(sid, data):
                 author_type='user',
                 author_name=data.get('author_name', 'Developer'),
                 content=data['content'],
-                metadata={}
+                msg_metadata={}
             )
             db.add(message)
             db.commit()
             db.refresh(message)
 
-            # Broadcast new message to all clients
-            await manager.broadcast('message_new', {
+            # Broadcast new message to all clients (on all namespaces)
+            message_data = {
                 'id': str(message.id),
                 'channel_id': str(message.channel_id),
                 'author_type': message.author_type,
                 'author_name': message.author_name,
                 'content': message.content,
                 'created_at': message.created_at.isoformat(),
-                'metadata': message.metadata
-            })
+                'metadata': message.msg_metadata
+            }
+
+            # Broadcast to default namespace
+            await sio.emit('message_new', message_data, namespace='/')
+            # Broadcast to /ws namespace
+            await sio.emit('message_new', message_data, namespace='/ws')
 
             # Check if message mentions any agents
             content_lower = data['content'].lower()
@@ -167,7 +172,13 @@ async def message_send(sid, data):
         logger.error(f"Error handling message: {e}")
         await sio.emit('error', {
             'message': f'Error processing message: {str(e)}'
-        }, room=sid)
+        }, room=sid, namespace=namespace)
+
+
+@sio.event
+async def message_send(sid, data):
+    """Handle incoming message from client on default namespace"""
+    await _handle_message_send(sid, data, namespace='/')
 
 
 @sio.event
@@ -229,3 +240,27 @@ async def typing_start(sid, data):
 async def ping(sid, data):
     """Handle ping for connection keepalive"""
     await sio.emit('pong', {'timestamp': data.get('timestamp')}, room=sid)
+
+
+# Also register handlers on /ws namespace for compatibility
+# Some clients might try to connect to this namespace
+@sio.on('connect', namespace='/ws')
+async def ws_connect(sid, environ):
+    """Handle client connection on /ws namespace"""
+    logger.info(f"New connection on /ws: {sid}")
+    await manager.connect(sid)
+    await sio.emit('connection_established', {
+        'sid': sid,
+        'message': 'Connected to RezNet AI'
+    }, room=sid, namespace='/ws')
+
+@sio.on('disconnect', namespace='/ws')
+async def ws_disconnect(sid):
+    """Handle client disconnection on /ws namespace"""
+    logger.info(f"Client disconnected on /ws: {sid}")
+    await manager.disconnect(sid)
+
+@sio.on('message_send', namespace='/ws')
+async def ws_message_send(sid, data):
+    """Handle incoming message from client on /ws namespace"""
+    await _handle_message_send(sid, data, namespace='/ws')
