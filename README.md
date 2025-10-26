@@ -123,6 +123,23 @@ Manages infrastructure, Docker, CI/CD, deployment, and monitoring.
 
 ## 💬 Usage Examples
 
+### Via Chat Interface
+Open http://localhost:3000 and interact with agents:
+
+```
+# Direct agent mention
+@backend How do I implement JWT authentication in FastAPI?
+
+# Orchestrated workflow
+@orchestrator Build a user registration feature with email verification
+
+# Context reset
+/clear
+```
+
+**Slash Commands:**
+- `/clear` - Reset channel context (agents won't see previous messages)
+
 ### Via API
 ```bash
 # Invoke an agent directly
@@ -133,6 +150,10 @@ curl -X POST http://localhost:8000/api/agents/invoke \
     "message": "Explain how to implement JWT authentication in FastAPI",
     "context": {}
   }'
+
+# Clear channel context
+curl -X POST http://localhost:8000/api/channels/{channel_id}/clear \
+  -H "Content-Type: application/json"
 ```
 
 ### Via WebSocket

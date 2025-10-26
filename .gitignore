@@ -98,3 +98,6 @@ CLAUDE.md
 # Development test scripts
 test_*.py
 *_debug.py
+
+# Runtime files (PIDs, temporary data)
+.runtime/

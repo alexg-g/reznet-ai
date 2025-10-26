@@ -20,6 +20,7 @@
 - ✅ Zustand state management
 - ✅ Channel navigation and message history
 - ✅ Typing indicators
+- ✅ Slash commands (`/clear` for context reset)
 - ✅ **TESTED AND WORKING** - UI renders perfectly at localhost:3000
 
 ### MCP Servers
@@ -57,6 +58,7 @@
 - Real-time message broadcasting
 - Agent color-coding in UI
 - Channel navigation
+- `/clear` command for context reset (soft deletion)
 
 ---
 
@@ -120,6 +122,9 @@ Open http://localhost:3000 and send messages like:
 @orchestrator Can you help me plan a new feature?
 @backend How do I implement JWT authentication in FastAPI?
 @frontend Create a responsive navbar component
+
+# Context reset (agents start fresh)
+/clear
 ```
 
 ---
@@ -369,5 +374,5 @@ You have a fully functional AI agent collaboration platform ready to use!
 
 ---
 
-**Last Updated**: 2025-10-24
+**Last Updated**: 2025-10-25
 **Status**: Production-ready local MVP ✅
