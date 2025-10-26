@@ -9,7 +9,7 @@ import type { Message, AgentStatus } from '@/lib/types'
 let socket: Socket | null = null
 
 export function useWebSocket() {
-  const { addMessage, updateAgentStatus } = useChatStore()
+  const { addMessage, updateAgentStatus, clearMessages } = useChatStore()
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
@@ -43,6 +43,22 @@ export function useWebSocket() {
         updateAgentStatus(data)
       })
 
+      socket.on('context_cleared', (data: { channel_id: string; message: string }) => {
+        console.log('Context cleared:', data)
+        clearMessages(data.channel_id)
+
+        // Add system message to indicate context was cleared
+        addMessage({
+          id: `system-${Date.now()}`,
+          channel_id: data.channel_id,
+          author_type: 'system',
+          author_name: 'System',
+          content: data.message,
+          created_at: new Date().toISOString(),
+          metadata: {}
+        })
+      })
+
       socket.on('disconnect', () => {
         console.log('❌ WebSocket disconnected')
       })
@@ -59,7 +75,7 @@ export function useWebSocket() {
         socket = null
       }
     }
-  }, [addMessage, updateAgentStatus])
+  }, [addMessage, updateAgentStatus, clearMessages])
 
   return socketRef.current
 }

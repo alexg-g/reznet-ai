@@ -78,8 +78,29 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, currentChannelId])
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim() || !currentChannelId) return
+
+    // Check for /clear slash command
+    if (input.trim() === '/clear') {
+      try {
+        const response = await fetch(`${API_URL}/api/channels/${currentChannelId}/clear`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          console.error('Failed to clear channel context')
+        }
+        // Context will be cleared via WebSocket event
+      } catch (error) {
+        console.error('Error clearing channel context:', error)
+      }
+      setInput('')
+      return
+    }
 
     sendMessage(currentChannelId, input)
     setInput('')

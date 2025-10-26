@@ -10,6 +10,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Create logs directory first (before starting any services)
+mkdir -p logs
+mkdir -p .runtime
+
 echo ""
 echo "🚀 Starting RezNet AI..."
 echo ""
@@ -56,11 +60,22 @@ cd backend
 source venv/bin/activate
 uvicorn main:app --reload --port 8000 > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
-echo -e "      ${GREEN}✓${NC} Backend server started (PID: $BACKEND_PID)"
 cd ..
 
-# Wait a moment for backend to start
-sleep 2
+# Wait for backend to be ready
+echo "      Waiting for backend to start..."
+sleep 3
+RETRIES=10
+for i in $(seq 1 $RETRIES); do
+    if curl -s http://localhost:8000/health > /dev/null 2>&1 || curl -s http://localhost:8000 > /dev/null 2>&1; then
+        echo -e "      ${GREEN}✓${NC} Backend server ready (PID: $BACKEND_PID)"
+        break
+    fi
+    if [ $i -eq $RETRIES ]; then
+        echo -e "      ${YELLOW}⚠${NC}  Backend may not have started correctly. Check logs/backend.log"
+    fi
+    sleep 1
+done
 
 # Start Frontend (if it exists)
 echo ""
@@ -69,8 +84,22 @@ if [ -f "frontend/package.json" ]; then
     cd frontend
     npm run dev > ../logs/frontend.log 2>&1 &
     FRONTEND_PID=$!
-    echo -e "   ${GREEN}✓${NC} Frontend server started (PID: $FRONTEND_PID)"
     cd ..
+
+    # Wait for frontend to be ready
+    echo "   Waiting for frontend to start..."
+    sleep 3
+    RETRIES=15
+    for i in $(seq 1 $RETRIES); do
+        if curl -s http://localhost:3000 > /dev/null 2>&1; then
+            echo -e "   ${GREEN}✓${NC} Frontend server ready (PID: $FRONTEND_PID)"
+            break
+        fi
+        if [ $i -eq $RETRIES ]; then
+            echo -e "   ${YELLOW}⚠${NC}  Frontend may not have started correctly. Check logs/frontend.log"
+        fi
+        sleep 1
+    done
 else
     echo -e "${YELLOW}⚠️  Frontend not found. Run setup.sh first.${NC}"
 fi
@@ -111,7 +140,6 @@ echo "   or press Ctrl+C and run: docker-compose down"
 echo ""
 
 # Save PIDs for stop script
-mkdir -p .runtime
 echo "$BACKEND_PID" > .runtime/backend.pid
 echo "$MCP_FS_PID" > .runtime/mcp-fs.pid
 if [ ! -z "$FRONTEND_PID" ]; then
@@ -120,9 +148,6 @@ fi
 if [ ! -z "$MCP_GH_PID" ]; then
     echo "$MCP_GH_PID" > .runtime/mcp-gh.pid
 fi
-
-# Create logs directory if it doesn't exist
-mkdir -p logs
 
 # Keep script running and show logs
 echo "Streaming logs (Ctrl+C to stop watching, services will continue)..."

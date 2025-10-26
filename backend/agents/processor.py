@@ -99,12 +99,23 @@ async def process_agent_message(
     """
     Process a message that mentions one or more agents
     """
+    from models.database import Channel
+
     db = SessionLocal()
     try:
+        # Get channel to check context_cleared_at
+        channel = db.query(Channel).filter(Channel.id == channel_id).first()
+
+        # Build message query
+        message_query = db.query(Message).filter(Message.channel_id == channel_id)
+
+        # If context was cleared, only get messages after that timestamp
+        if channel and channel.context_cleared_at:
+            message_query = message_query.filter(Message.created_at > channel.context_cleared_at)
+
         # Get conversation context
         recent_messages = (
-            db.query(Message)
-            .filter(Message.channel_id == channel_id)
+            message_query
             .order_by(Message.created_at.desc())
             .limit(10)
             .all()

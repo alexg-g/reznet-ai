@@ -47,10 +47,21 @@ async def get_channel_messages(
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
-    """Get messages for a channel"""
+    """Get messages for a channel (respects context_cleared_at)"""
+    # Get channel to check context_cleared_at
+    channel = db.query(Channel).filter(Channel.id == channel_id).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    # Build message query
+    message_query = db.query(Message).filter(Message.channel_id == channel_id)
+
+    # If context was cleared, only get messages after that timestamp
+    if channel.context_cleared_at:
+        message_query = message_query.filter(Message.created_at > channel.context_cleared_at)
+
     messages = (
-        db.query(Message)
-        .filter(Message.channel_id == channel_id)
+        message_query
         .order_by(Message.created_at.desc())
         .offset(offset)
         .limit(limit)
@@ -70,3 +81,36 @@ async def archive_channel(channel_id: UUID, db: Session = Depends(get_db)):
     channel.is_archived = True
     db.commit()
     return {"message": "Channel archived successfully"}
+
+
+@router.post("/channels/{channel_id}/clear")
+async def clear_channel_context(channel_id: UUID, db: Session = Depends(get_db)):
+    """
+    Clear channel context - messages before this timestamp will be hidden from agents.
+    This implements the /clear slash command functionality.
+    """
+    from datetime import datetime, timezone
+    from websocket.manager import manager
+
+    channel = db.query(Channel).filter(Channel.id == channel_id).first()
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    # Set context_cleared_at to now
+    cleared_at = datetime.now(timezone.utc)
+    channel.context_cleared_at = cleared_at
+    db.commit()
+    db.refresh(channel)
+
+    # Broadcast context_cleared event via WebSocket
+    await manager.broadcast('context_cleared', {
+        'channel_id': str(channel_id),
+        'cleared_at': cleared_at.isoformat(),
+        'message': '🔄 Context cleared - starting fresh'
+    })
+
+    return {
+        "message": "Channel context cleared successfully",
+        "channel_id": str(channel_id),
+        "cleared_at": cleared_at.isoformat()
+    }
