@@ -3,11 +3,15 @@ Base Agent class for all specialist agents
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import logging
+import re
+import xml.etree.ElementTree as ET
 from uuid import UUID
 
 from agents.llm_client import LLMClient
+from agents.mcp_client import MCPFilesystemClient
+from agents.tool_schemas import get_tool_schemas, get_tool_instructions
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -52,19 +56,25 @@ class BaseAgent(ABC):
 
         self.llm = LLMClient(provider=provider, model=model)
 
+        # Initialize MCP filesystem client
+        self.mcp_fs = MCPFilesystemClient()
+
         # Agent configuration
         self.temperature = self.config.get("temperature", settings.DEFAULT_TEMPERATURE)
         self.max_tokens = self.config.get("max_tokens", settings.MAX_TOKENS_PER_RESPONSE)
+
+        # Tool configuration
+        self.enable_tools = self.config.get("enable_tools", True)
 
         # Status tracking
         self.status = "online"
         self.current_task = None
 
-        logger.info(f"Initialized agent: {self.name} ({self.agent_type}) | Provider: {provider} | Model: {model}")
+        logger.info(f"Initialized agent: {self.name} ({self.agent_type}) | Provider: {provider} | Model: {model} | Tools: {self.enable_tools}")
 
     def get_system_prompt(self) -> str:
         """
-        Generate system prompt from persona
+        Generate system prompt from persona, including tool instructions
         """
         role = self.persona.get("role", "AI Assistant")
         goal = self.persona.get("goal", "Help users with their tasks")
@@ -88,9 +98,129 @@ Guidelines:
 - Focus on your area of expertise
 - Collaborate with other agents when needed (@backend, @frontend, @qa, @devops)
 
+Task Execution Protocol:
+- You work on ONE task at a time
+- After completing a task, clearly indicate completion
+- If you need another agent's help, mention them directly: "@backend can you..."
+- Report your progress and any blockers
+
 Remember: You are part of a team of AI agents working together on software development tasks.
+When you mention another agent (like @backend), they will be automatically notified and can respond.
 """
+
+        # Add tool instructions if tools are enabled
+        if self.enable_tools:
+            provider = self.llm.provider
+            tool_instructions = get_tool_instructions(provider)
+            system_prompt += "\n" + tool_instructions
+
         return system_prompt
+
+    def get_full_system_prompt(self) -> str:
+        """
+        Get the complete assembled system prompt including all additions.
+        This is the full prompt that the LLM receives.
+
+        Returns:
+            Complete system prompt with persona, tools, and instructions
+        """
+        return self.get_system_prompt()
+
+    async def execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a tool call using MCP client
+
+        Args:
+            tool_name: Name of the tool to execute
+            tool_input: Tool parameters/arguments
+
+        Returns:
+            Tool execution result
+        """
+        try:
+            logger.info(f"Executing tool: {tool_name} with input: {tool_input}")
+
+            # Route to appropriate MCP client method
+            if tool_name == "read_file":
+                result = await self.mcp_fs.read_file(tool_input.get("path"))
+            elif tool_name == "write_file":
+                result = await self.mcp_fs.write_file(
+                    tool_input.get("path"),
+                    tool_input.get("content")
+                )
+            elif tool_name == "list_directory":
+                result = await self.mcp_fs.list_directory(tool_input.get("path", ""))
+            elif tool_name == "create_directory":
+                result = await self.mcp_fs.create_directory(tool_input.get("path"))
+            elif tool_name == "delete_file":
+                result = await self.mcp_fs.delete_file(tool_input.get("path"))
+            elif tool_name == "file_exists":
+                result = await self.mcp_fs.file_exists(tool_input.get("path"))
+            else:
+                result = {
+                    "success": False,
+                    "error": f"Unknown tool: {tool_name}"
+                }
+
+            logger.info(f"Tool {tool_name} result: {result.get('success', False)}")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error executing tool {tool_name}: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def _parse_xml_tool_calls(self, text: str) -> Tuple[str, List[Dict[str, Any]]]:
+        """
+        Parse XML-formatted tool calls from LLM response (for Ollama)
+
+        Args:
+            text: Response text that may contain XML tool calls
+
+        Returns:
+            Tuple of (cleaned_text, tool_calls)
+            - cleaned_text: Response with tool calls removed
+            - tool_calls: List of extracted tool calls
+        """
+        tool_calls = []
+
+        # Find all <tool_call> tags
+        pattern = r'<tool_call\s+name="([^"]+)">(.*?)</tool_call>'
+        matches = re.finditer(pattern, text, re.DOTALL)
+
+        for match in matches:
+            tool_name = match.group(1)
+            tool_body = match.group(2)
+
+            # Parse the tool body as XML to extract parameters
+            try:
+                # Wrap in root element for parsing
+                xml_str = f"<root>{tool_body}</root>"
+                root = ET.fromstring(xml_str)
+
+                # Extract parameters
+                tool_input = {}
+                for child in root:
+                    # Handle text content, stripping whitespace
+                    tool_input[child.tag] = child.text.strip() if child.text else ""
+
+                tool_calls.append({
+                    "name": tool_name,
+                    "input": tool_input
+                })
+
+                logger.debug(f"Parsed tool call: {tool_name} with input {tool_input}")
+
+            except ET.ParseError as e:
+                logger.error(f"Failed to parse tool call XML: {e}")
+                continue
+
+        # Remove tool calls from text
+        cleaned_text = re.sub(pattern, '', text, flags=re.DOTALL)
+
+        return cleaned_text.strip(), tool_calls if tool_calls else None
 
     async def process_message(
         self,
@@ -98,7 +228,7 @@ Remember: You are part of a team of AI agents working together on software devel
         context: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Process an incoming message and generate a response
+        Process an incoming message and generate a response with tool support
 
         Args:
             message: The user message to process
@@ -114,13 +244,50 @@ Remember: You are part of a team of AI agents working together on software devel
             # Build the prompt with context
             prompt = self._build_prompt(message, context)
 
+            # Get tool schemas if tools are enabled
+            tools = None
+            if self.enable_tools and self.llm.has_native_tool_calling():
+                tools = get_tool_schemas(self.llm.provider)
+
             # Generate response using LLM
-            response = await self.llm.generate(
+            response, tool_calls = await self.llm.generate(
                 prompt=prompt,
                 system=self.get_system_prompt(),
                 temperature=self.temperature,
-                max_tokens=self.max_tokens
+                max_tokens=self.max_tokens,
+                tools=tools
             )
+
+            # Handle tool calls (native or XML-based)
+            if self.enable_tools:
+                # For Ollama (no native tool calling), parse XML
+                if not self.llm.has_native_tool_calling():
+                    response, tool_calls = self._parse_xml_tool_calls(response)
+
+                # Execute tool calls if any
+                if tool_calls:
+                    logger.info(f"Agent {self.name} made {len(tool_calls)} tool call(s)")
+                    tool_results = []
+
+                    for tool_call in tool_calls:
+                        tool_name = tool_call.get("name")
+                        tool_input = tool_call.get("input", {})
+
+                        result = await self.execute_tool(tool_name, tool_input)
+                        tool_results.append({
+                            "tool": tool_name,
+                            "input": tool_input,
+                            "result": result
+                        })
+
+                    # Format tool results for response
+                    results_text = self._format_tool_results(tool_results)
+
+                    # Append tool results to response
+                    if response:
+                        response = f"{response}\n\n{results_text}"
+                    else:
+                        response = results_text
 
             # Post-process response if needed
             response = self._post_process_response(response, context)
@@ -134,6 +301,43 @@ Remember: You are part of a team of AI agents working together on software devel
             logger.error(f"Error processing message in {self.name}: {e}")
             self.status = "error"
             return f"I encountered an error while processing your request: {str(e)}"
+
+    def _format_tool_results(self, tool_results: List[Dict[str, Any]]) -> str:
+        """
+        Format tool execution results for display
+
+        Args:
+            tool_results: List of tool execution results
+
+        Returns:
+            Formatted string of results
+        """
+        lines = []
+        for tr in tool_results:
+            tool_name = tr["tool"]
+            result = tr["result"]
+
+            if result.get("success"):
+                if tool_name == "write_file":
+                    lines.append(f"✓ Created/updated file: {tr['input']['path']}")
+                elif tool_name == "read_file":
+                    lines.append(f"✓ Read file: {tr['input']['path']}")
+                elif tool_name == "list_directory":
+                    path = tr['input'].get('path', '/')
+                    files = result.get('files', [])
+                    lines.append(f"✓ Listed directory {path}: {len(files)} items")
+                elif tool_name == "create_directory":
+                    lines.append(f"✓ Created directory: {tr['input']['path']}")
+                elif tool_name == "delete_file":
+                    lines.append(f"✓ Deleted file: {tr['input']['path']}")
+                elif tool_name == "file_exists":
+                    exists = result.get('exists', False)
+                    lines.append(f"✓ File {tr['input']['path']}: {'exists' if exists else 'not found'}")
+            else:
+                error = result.get("error", "Unknown error")
+                lines.append(f"✗ Tool {tool_name} failed: {error}")
+
+        return "\n".join(lines)
 
     def _build_prompt(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
         """

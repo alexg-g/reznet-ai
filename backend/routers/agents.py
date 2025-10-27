@@ -8,8 +8,8 @@ from typing import List
 from uuid import UUID
 
 from core.database import get_db
-from models.database import Agent
-from models.schemas import AgentResponse, AgentInvokeRequest, AgentInvokeResponse
+from models.database import Agent, Channel
+from models.schemas import AgentResponse, AgentInvokeRequest, AgentInvokeResponse, ChannelResponse
 
 router = APIRouter()
 
@@ -116,3 +116,69 @@ async def deactivate_agent(agent_id: UUID, db: Session = Depends(get_db)):
     agent.is_active = False
     db.commit()
     return {"message": f"Agent {agent.name} deactivated"}
+
+
+@router.get("/agents/{agent_id}/dm-channel", response_model=ChannelResponse)
+async def get_agent_dm_channel(agent_id: UUID, db: Session = Depends(get_db)):
+    """
+    Get the DM channel for an agent (creates if doesn't exist)
+
+    Returns the dedicated DM channel for 1-on-1 conversations with this agent.
+    Channel name pattern: dm-{agent_name}
+    """
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    # DM channel naming: dm-{agent_name}
+    dm_channel_name = f"dm-{agent.name}"
+
+    # Find or create DM channel
+    dm_channel = db.query(Channel).filter(Channel.name == dm_channel_name).first()
+
+    if not dm_channel:
+        # Create DM channel if it doesn't exist
+        dm_channel = Channel(
+            name=dm_channel_name,
+            topic=f"Direct message with {agent.name}",
+            is_archived=False
+        )
+        db.add(dm_channel)
+        db.commit()
+        db.refresh(dm_channel)
+
+    return dm_channel
+
+
+@router.get("/agents/{agent_id}/system-prompt")
+async def get_agent_system_prompt(agent_id: UUID, db: Session = Depends(get_db)):
+    """
+    Get the full assembled system prompt for an agent
+
+    Returns the complete system prompt including persona, tool instructions,
+    and all system additions that the agent uses for LLM interactions.
+    """
+    from agents.processor import get_agent_by_id
+
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    # Get agent instance to access system prompt
+    agent_instance = await get_agent_by_id(agent_id)
+
+    if not agent_instance:
+        raise HTTPException(status_code=500, detail="Failed to instantiate agent")
+
+    # Get full system prompt
+    system_prompt = agent_instance.get_full_system_prompt()
+
+    return {
+        "agent_id": str(agent_id),
+        "agent_name": agent.name,
+        "agent_type": agent.agent_type,
+        "system_prompt": system_prompt,
+        "provider": agent_instance.llm.provider,
+        "model": agent_instance.llm.model,
+        "tools_enabled": agent_instance.enable_tools
+    }

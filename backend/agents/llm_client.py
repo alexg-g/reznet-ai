@@ -3,7 +3,7 @@ Multi-provider LLM client
 Supports Anthropic Claude, OpenAI, and Ollama
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 import logging
 from core.config import settings
 
@@ -77,14 +77,25 @@ class LLMClient:
         except ImportError:
             raise ImportError("httpx package not installed. Run: pip install httpx")
 
+    def has_native_tool_calling(self) -> bool:
+        """
+        Check if this provider supports native tool/function calling
+
+        Returns:
+            True if provider has native tool calling support (Anthropic, OpenAI)
+            False for providers that need text-based tool invocation (Ollama)
+        """
+        return self.provider in ["anthropic", "openai"]
+
     async def generate(
         self,
         prompt: str,
         system: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 4000,
+        tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
-    ) -> str:
+    ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
         """
         Generate text using the configured LLM provider
 
@@ -93,17 +104,20 @@ class LLMClient:
             system: System message/instructions
             temperature: Sampling temperature (0-1)
             max_tokens: Maximum tokens to generate
+            tools: Tool/function schemas for native tool calling (if supported)
             **kwargs: Additional provider-specific parameters
 
         Returns:
-            Generated text response
+            Tuple of (generated_text, tool_calls)
+            - generated_text: The text response from the LLM
+            - tool_calls: List of tool calls if LLM requested any, None otherwise
         """
         if self.provider == "anthropic":
-            return await self._generate_anthropic(prompt, system, temperature, max_tokens, **kwargs)
+            return await self._generate_anthropic(prompt, system, temperature, max_tokens, tools, **kwargs)
         elif self.provider == "openai":
-            return await self._generate_openai(prompt, system, temperature, max_tokens, **kwargs)
+            return await self._generate_openai(prompt, system, temperature, max_tokens, tools, **kwargs)
         elif self.provider == "ollama":
-            return await self._generate_ollama(prompt, system, temperature, max_tokens, **kwargs)
+            return await self._generate_ollama(prompt, system, temperature, max_tokens, tools, **kwargs)
 
     async def _generate_anthropic(
         self,
@@ -111,21 +125,44 @@ class LLMClient:
         system: Optional[str],
         temperature: float,
         max_tokens: int,
+        tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
-    ) -> str:
+    ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
         """Generate using Anthropic Claude"""
         try:
             messages = [{"role": "user", "content": prompt}]
 
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system if system else "You are a helpful AI assistant.",
-                messages=messages
-            )
+            # Build request parameters
+            params = {
+                "model": self.model,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "system": system if system else "You are a helpful AI assistant.",
+                "messages": messages
+            }
 
-            return response.content[0].text
+            # Add tools if provided
+            if tools:
+                params["tools"] = tools
+
+            response = self.client.messages.create(**params)
+
+            # Extract text content
+            text_content = ""
+            tool_calls = []
+
+            for block in response.content:
+                if block.type == "text":
+                    text_content += block.text
+                elif block.type == "tool_use":
+                    # Convert Anthropic tool use to standard format
+                    tool_calls.append({
+                        "id": block.id,
+                        "name": block.name,
+                        "input": block.input
+                    })
+
+            return text_content, tool_calls if tool_calls else None
 
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")
@@ -137,8 +174,9 @@ class LLMClient:
         system: Optional[str],
         temperature: float,
         max_tokens: int,
+        tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
-    ) -> str:
+    ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
         """Generate using OpenAI"""
         try:
             messages = []
@@ -146,14 +184,37 @@ class LLMClient:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
 
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+            # Build request parameters
+            params = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens
+            }
 
-            return response.choices[0].message.content
+            # Add tools if provided
+            if tools:
+                params["tools"] = tools
+                params["tool_choice"] = "auto"
+
+            response = self.client.chat.completions.create(**params)
+
+            message = response.choices[0].message
+            text_content = message.content or ""
+
+            # Extract tool calls if present
+            tool_calls = None
+            if hasattr(message, 'tool_calls') and message.tool_calls:
+                tool_calls = []
+                for tc in message.tool_calls:
+                    import json
+                    tool_calls.append({
+                        "id": tc.id,
+                        "name": tc.function.name,
+                        "input": json.loads(tc.function.arguments)
+                    })
+
+            return text_content, tool_calls
 
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
@@ -165,9 +226,15 @@ class LLMClient:
         system: Optional[str],
         temperature: float,
         max_tokens: int,
+        tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
-    ) -> str:
-        """Generate using Ollama (local models)"""
+    ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
+        """
+        Generate using Ollama (local models)
+
+        Note: Ollama doesn't support native tool calling.
+        Tools are ignored here; tool extraction happens via XML parsing in BaseAgent.
+        """
         import json
         import traceback
 
@@ -242,7 +309,8 @@ class LLMClient:
             result = data.get("response", "")
             logger.info(f"Result length: {len(result)}")
             logger.info("="*60)
-            return result
+            # Ollama doesn't support native tool calling, return text only
+            return result, None
 
         except Exception as e:
             logger.error("="*60)
@@ -256,7 +324,8 @@ class LLMClient:
         prompt: str,
         system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 4000
+        max_tokens: int = 4000,
+        tools: Optional[List[Dict[str, Any]]] = None
     ):
         """
         Generate text with streaming (for future real-time responses)
@@ -264,8 +333,8 @@ class LLMClient:
         """
         # For now, just call the regular generate method
         # In the future, this can be implemented for true streaming
-        response = await self.generate(prompt, system, temperature, max_tokens)
-        yield response
+        response, tool_calls = await self.generate(prompt, system, temperature, max_tokens, tools)
+        yield response, tool_calls
 
     async def aclose(self):
         """

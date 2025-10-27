@@ -40,3 +40,18 @@ export interface AgentStatus {
   status: 'online' | 'thinking' | 'offline' | 'working'
   current_task?: string
 }
+
+export interface ViewContext {
+  type: 'channel' | 'dm'
+  id: string  // channel_id or agent_id
+}
+
+export interface AgentSystemPrompt {
+  agent_id: string
+  agent_name: string
+  agent_type: string
+  system_prompt: string
+  provider: string
+  model: string
+  tools_enabled: boolean
+}

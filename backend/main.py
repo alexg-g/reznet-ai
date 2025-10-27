@@ -10,7 +10,7 @@ import os
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 
-from routers import channels, agents, tasks, workflows
+from routers import channels, agents, tasks, workflows, workspace
 from websocket import manager as websocket_manager  # Import full module to register event handlers
 from websocket.manager import socket_app
 from core.database import engine, Base
@@ -55,6 +55,15 @@ async def lifespan(app: FastAPI):
 
     print(f"\n🔧 Debug mode: {settings.DEBUG}")
 
+    # Initialize database (agents, channels, DM channels)
+    from core.database import SessionLocal
+    from utils import initialize_database
+    db = SessionLocal()
+    try:
+        initialize_database(db)
+    finally:
+        db.close()
+
     # Clear agent cache to ensure fresh instances with valid HTTP clients
     # This is critical for hot-reload scenarios where httpx.AsyncClient
     # connections become stale
@@ -95,6 +104,7 @@ app.include_router(channels.router, prefix="/api", tags=["channels"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(workflows.router, prefix="/api", tags=["workflows"])
+app.include_router(workspace.router, tags=["workspace"])
 
 
 # Health check endpoint

@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useChatStore } from '@/store/chatStore'
 import { useWebSocket, sendMessage } from '@/hooks/useWebSocket'
 import { API_URL, getAgentColor } from '@/lib/constants'
 import { format } from 'date-fns'
 import type { Channel, Agent } from '@/lib/types'
+import FileBrowser from '@/components/FileBrowser'
+import Sidebar from '@/components/Sidebar'
 
 export default function Home() {
+  const router = useRouter()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -125,87 +129,14 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full bg-deep-dark grid-bg-subtle">
       {/* Sidebar */}
-      <aside className="flex h-full w-64 flex-shrink-0 flex-col bg-deep-dark/80 backdrop-blur-sm border-r border-electric-purple/30">
-        <div className="flex h-full flex-col p-4">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-6 p-2">
-            <div className="bg-gradient-to-br from-neon-cyan to-electric-purple rounded-lg size-10 shadow-glow-cyan flex items-center justify-center">
-              <span className="text-white font-bold text-xl">R</span>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-white text-base font-bold leading-normal">RezNet AI</h1>
-              <p className="text-neon-cyan/80 text-sm font-normal leading-normal">Online</p>
-            </div>
-          </div>
-
-          {/* Channels */}
-          <div className="flex-grow flex flex-col gap-1 overflow-y-auto glowing-scrollbar">
-            <p className="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 py-2">
-              Channels
-            </p>
-            {channels.map((channel) => (
-              <button
-                key={channel.id}
-                onClick={() => setCurrentChannel(channel.id)}
-                className={`flex items-center gap-3 px-3 py-2 rounded transition-colors duration-200 relative ${
-                  currentChannelId === channel.id
-                    ? 'bg-electric-purple/20 text-white'
-                    : 'text-gray-300 hover:bg-electric-purple/10 hover:text-white'
-                }`}
-              >
-                {currentChannelId === channel.id && (
-                  <div className="absolute left-0 top-0 h-full w-1 bg-neon-cyan rounded-r-full shadow-glow-cyan" />
-                )}
-                <span className={`material-symbols-outlined ${
-                  currentChannelId === channel.id ? 'text-neon-cyan' : 'text-electric-purple'
-                }`}>
-                  tag
-                </span>
-                <span className="text-sm font-medium">{channel.name}</span>
-              </button>
-            ))}
-
-            {/* Agents Section */}
-            <p className="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 pt-6 pb-2">
-              AI Agents
-            </p>
-            {agents.map((agent) => {
-              const colors = getAgentColor(agent.name)
-              const status = agentStatuses[agent.name]
-              return (
-                <div
-                  key={agent.id}
-                  className={`flex items-center gap-3 px-3 py-2 rounded text-gray-300`}
-                >
-                  <span className={`material-symbols-outlined ${colors.text}`}>
-                    smart_toy
-                  </span>
-                  <span className="text-sm font-medium">{agent.name}</span>
-                  {status?.status === 'thinking' && (
-                    <span className={`ml-auto w-2 h-2 rounded-full ${colors.bg} animate-pulse`} />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* User Profile */}
-          <div className="flex-shrink-0 mt-auto border-t border-electric-purple/30 pt-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="size-10 rounded-full bg-gradient-to-br from-hot-magenta to-neon-cyan shadow-glow-cyan flex items-center justify-center">
-                  <span className="text-white font-bold">D</span>
-                </div>
-                <div className="absolute bottom-0 right-0 size-3 bg-neon-cyan rounded-full border-2 border-deep-dark shadow-glow-cyan" />
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-white text-base font-medium leading-normal">Developer</h1>
-                <p className="text-neon-cyan/80 text-sm font-normal leading-normal">Online</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar
+        channels={channels}
+        agents={agents}
+        agentStatuses={agentStatuses}
+        activeChannelId={currentChannelId}
+        onChannelClick={(id) => setCurrentChannel(id)}
+        onAgentClick={(id) => router.push(`/dm/${id}`)}
+      />
 
       {/* Main Content Area */}
       <main className="flex flex-1 flex-col h-screen">
@@ -317,6 +248,9 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Workspace File Browser */}
+      <FileBrowser />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Channel, Message, Agent, AgentStatus } from '@/lib/types'
+import type { Channel, Message, Agent, AgentStatus, ViewContext, AgentSystemPrompt } from '@/lib/types'
 
 interface ChatState {
   // Data
@@ -9,6 +9,11 @@ interface ChatState {
   agentStatuses: Record<string, AgentStatus>
   currentChannelId: string | null
 
+  // DM-specific state
+  currentView: ViewContext | null
+  dmChannels: Record<string, Channel>  // agent_id -> DM channel
+  agentSystemPrompts: Record<string, AgentSystemPrompt>  // agent_id -> system prompt
+
   // Actions
   setChannels: (channels: Channel[]) => void
   setCurrentChannel: (channelId: string) => void
@@ -17,6 +22,11 @@ interface ChatState {
   clearMessages: (channelId: string) => void
   setAgents: (agents: Agent[]) => void
   updateAgentStatus: (status: AgentStatus) => void
+
+  // DM actions
+  setCurrentView: (view: ViewContext | null) => void
+  setDMChannel: (agentId: string, channel: Channel) => void
+  setAgentSystemPrompt: (agentId: string, prompt: AgentSystemPrompt) => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -25,6 +35,9 @@ export const useChatStore = create<ChatState>((set) => ({
   agents: [],
   agentStatuses: {},
   currentChannelId: null,
+  currentView: null,
+  dmChannels: {},
+  agentSystemPrompts: {},
 
   setChannels: (channels) => set({ channels }),
 
@@ -60,6 +73,23 @@ export const useChatStore = create<ChatState>((set) => ({
     agentStatuses: {
       ...state.agentStatuses,
       [status.agent_name]: status
+    }
+  })),
+
+  // DM actions
+  setCurrentView: (view) => set({ currentView: view }),
+
+  setDMChannel: (agentId, channel) => set((state) => ({
+    dmChannels: {
+      ...state.dmChannels,
+      [agentId]: channel
+    }
+  })),
+
+  setAgentSystemPrompt: (agentId, prompt) => set((state) => ({
+    agentSystemPrompts: {
+      ...state.agentSystemPrompts,
+      [agentId]: prompt
     }
   })),
 }))
