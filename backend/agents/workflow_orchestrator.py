@@ -9,13 +9,14 @@ import asyncio
 import re
 from typing import Dict, Any, List, Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from sqlalchemy.orm import Session
 
 from models.database import Workflow, WorkflowTask, Agent, Message
 from agents.processor import get_agent_instance
 from websocket.manager import ConnectionManager
+from utils.text_parsing import strip_markdown, extract_agent_names_from_task_line
 
 logger = logging.getLogger(__name__)
 
@@ -164,21 +165,29 @@ class WorkflowOrchestrator:
 Break this down into specific, actionable tasks. For each task:
 1. Assign it to the appropriate agent (@backend, @frontend, @qa, @devops)
 2. Provide a clear description of what needs to be done
-3. Identify any dependencies on other tasks
+3. **ALWAYS include the file path where code should be written**
+4. Identify any dependencies on other tasks
 
 Use this EXACT format (very important):
 
-Task 1: @agent_name - Description of task 1
-Task 2: @agent_name - Description of task 2 (depends on Task 1)
-Task 3: @agent_name - Description of task 3
-Task 4: @agent_name - Description of task 4 (depends on Task 2, Task 3)
+Task 1: @agent_name - Description of task 1 in path/to/file.ext
+Task 2: @agent_name - Description of task 2 in path/to/file2.ext (depends on Task 1)
+Task 3: @agent_name - Description of task 3 in path/to/file3.ext
+Task 4: @agent_name - Description of task 4 in path/to/file4.ext (depends on Task 2, Task 3)
 
 Guidelines:
 - Number tasks sequentially starting from 1
 - Always specify agent with @ symbol
+- **CRITICAL: Include file paths in every task description** (e.g., "in backend/app.py" or "in frontend/App.tsx")
 - Keep descriptions specific and actionable
 - Only add dependencies if task actually requires previous task outputs
 - Think about what can run in parallel vs. sequentially
+- Agents will create actual files at these paths, so be specific!
+
+Example:
+Task 1: @backend - Create Flask application with /flip endpoint in backend/app.py
+Task 2: @frontend - Build CoinFlip React component with flip button in frontend/src/CoinFlip.tsx
+Task 3: @qa - Write unit tests for flip endpoint in tests/test_app.py (depends on Task 1)
 
 Create the plan now:"""
 
@@ -215,14 +224,8 @@ Create the plan now:"""
         for line in lines:
             line = line.strip()
 
-            # Strip common markdown formatting that might interfere with parsing
-            # Remove bold markers (**text** or __text__)
-            line = re.sub(r'\*\*(.+?)\*\*', r'\1', line)
-            line = re.sub(r'__(.+?)__', r'\1', line)
-            # Remove header markers (### text)
-            line = re.sub(r'^#+\s*', '', line)
-            # Remove italic markers (*text* or _text_) - but preserve @mentions
-            line = re.sub(r'(?<!@)\*(.+?)\*', r'\1', line)
+            # Strip markdown formatting using centralized utility
+            line = strip_markdown(line)
 
             match = re.match(task_pattern, line, re.IGNORECASE)
 
@@ -339,7 +342,7 @@ Create the plan now:"""
 
             # Update status
             workflow.status = "executing"
-            workflow.started_at = datetime.utcnow()
+            workflow.started_at = datetime.now(timezone.utc)
             db.commit()
 
             # Broadcast started event
@@ -407,9 +410,32 @@ Create the plan now:"""
                     'workflow_id': str(workflow.id),
                     'error': workflow.error or "One or more tasks failed"
                 })
+
+                # Post failure message to channel
+                failure_msg = Message(
+                    channel_id=workflow.channel_id,
+                    author_id=workflow.orchestrator_id,
+                    author_type='agent',
+                    author_name='@orchestrator',
+                    content=f"❌ Workflow failed: {workflow.error or 'One or more tasks failed'}",
+                    metadata={'workflow_id': str(workflow.id)}
+                )
+                db.add(failure_msg)
+                db.commit()
+                db.refresh(failure_msg)
+
+                await self.manager.broadcast('message_new', {
+                    'id': str(failure_msg.id),
+                    'channel_id': str(failure_msg.channel_id),
+                    'author_type': failure_msg.author_type,
+                    'author_name': failure_msg.author_name,
+                    'content': failure_msg.content,
+                    'created_at': failure_msg.created_at.isoformat(),
+                    'metadata': failure_msg.msg_metadata
+                })
             else:
                 workflow.status = "completed"
-                workflow.completed_at = datetime.utcnow()
+                workflow.completed_at = datetime.now(timezone.utc)
 
                 # Aggregate results
                 results = self._aggregate_results(workflow)
@@ -418,6 +444,38 @@ Create the plan now:"""
                 await self.manager.broadcast('workflow:completed', {
                     'workflow_id': str(workflow.id),
                     'results': results
+                })
+
+                # Build completion summary with task outputs
+                summary_parts = [f"✅ Workflow completed successfully! ({results['completed_tasks']}/{results['total_tasks']} tasks)"]
+
+                if results.get('duration_seconds'):
+                    summary_parts.append(f"\n⏱️ Duration: {results['duration_seconds']:.1f}s")
+
+                summary_parts.append("\n\n**Agent Contributions:**")
+                for agent_name, output in results.get('agent_contributions', {}).items():
+                    summary_parts.append(f"\n• {agent_name}: {output[:150]}...")
+
+                completion_msg = Message(
+                    channel_id=workflow.channel_id,
+                    author_id=workflow.orchestrator_id,
+                    author_type='agent',
+                    author_name='@orchestrator',
+                    content=''.join(summary_parts),
+                    metadata={'workflow_id': str(workflow.id), 'results': results}
+                )
+                db.add(completion_msg)
+                db.commit()
+                db.refresh(completion_msg)
+
+                await self.manager.broadcast('message_new', {
+                    'id': str(completion_msg.id),
+                    'channel_id': str(completion_msg.channel_id),
+                    'author_type': completion_msg.author_type,
+                    'author_name': completion_msg.author_name,
+                    'content': completion_msg.content,
+                    'created_at': completion_msg.created_at.isoformat(),
+                    'metadata': completion_msg.msg_metadata
                 })
 
             db.commit()
@@ -433,6 +491,29 @@ Create the plan now:"""
             await self.manager.broadcast('workflow:failed', {
                 'workflow_id': str(workflow_id),
                 'error': str(e)
+            })
+
+            # Post error message to channel
+            error_msg = Message(
+                channel_id=workflow.channel_id,
+                author_id=workflow.orchestrator_id,
+                author_type='agent',
+                author_name='@orchestrator',
+                content=f"❌ Workflow execution error: {str(e)}",
+                metadata={'workflow_id': str(workflow.id), 'error': str(e)}
+            )
+            db.add(error_msg)
+            db.commit()
+            db.refresh(error_msg)
+
+            await self.manager.broadcast('message_new', {
+                'id': str(error_msg.id),
+                'channel_id': str(error_msg.channel_id),
+                'author_type': error_msg.author_type,
+                'author_name': error_msg.author_name,
+                'content': error_msg.content,
+                'created_at': error_msg.created_at.isoformat(),
+                'metadata': error_msg.msg_metadata
             })
 
         finally:
@@ -499,7 +580,7 @@ Create the plan now:"""
 
             # Update status
             workflow_task.status = "in_progress"
-            workflow_task.started_at = datetime.utcnow()
+            workflow_task.started_at = datetime.now(timezone.utc)
             db.commit()
 
             # Broadcast task started
@@ -526,7 +607,7 @@ Create the plan now:"""
                 "agent": workflow_task.agent.name
             }
             workflow_task.status = "completed"
-            workflow_task.completed_at = datetime.utcnow()
+            workflow_task.completed_at = datetime.now(timezone.utc)
             db.commit()
 
             # Broadcast task completed
@@ -544,7 +625,7 @@ Create the plan now:"""
             logger.error(f"Error executing task {workflow_task.id}: {e}")
             workflow_task.status = "failed"
             workflow_task.error = str(e)
-            workflow_task.completed_at = datetime.utcnow()
+            workflow_task.completed_at = datetime.now(timezone.utc)
             db.commit()
 
             await self.manager.broadcast('workflow:task_failed', {
@@ -568,6 +649,7 @@ Create the plan now:"""
         - Original user request
         - Outputs from completed dependencies
         - Conversation history
+        - Explicit file operation instructions
 
         Args:
             workflow_task: Task being executed
@@ -580,7 +662,18 @@ Create the plan now:"""
         context = {
             "workflow_request": workflow.description,
             "task_number": workflow_task.order_index + 1,
-            "total_tasks": len(workflow.workflow_tasks)
+            "total_tasks": len(workflow.workflow_tasks),
+            "workspace_instructions": """
+IMPORTANT: You must CREATE ACTUAL FILES in the workspace using tool calls.
+
+Task Completion Requirements:
+1. Create all necessary files using <tool_call name="write_file"> XML format
+2. Include complete, working code in each file
+3. Use proper file paths (e.g., "coin_flip/app.py" or "frontend/CoinFlip.tsx")
+4. After creating files, confirm what you created
+
+DO NOT just describe what files should be created. Actually create them!
+"""
         }
 
         # Add outputs from dependencies
@@ -646,5 +739,5 @@ Create the plan now:"""
         workflow = db.query(Workflow).filter(Workflow.id == workflow_id).first()
         if workflow:
             workflow.status = "cancelled"
-            workflow.completed_at = datetime.utcnow()
+            workflow.completed_at = datetime.now(timezone.utc)
             db.commit()

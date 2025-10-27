@@ -57,10 +57,19 @@ async def list_workspace_files(path: str = ""):
                 detail=result.get("error", "Failed to list directory")
             )
 
+        # Add full path to each file for frontend navigation
+        files = result.get("files", [])
+        for file in files:
+            # Construct full path from current directory path + filename
+            if path:
+                file["path"] = f"{path}/{file['name']}"
+            else:
+                file["path"] = file['name']
+
         return {
             "path": result.get("path", "/"),
-            "files": result.get("files", []),
-            "count": len(result.get("files", []))
+            "files": files,
+            "count": len(files)
         }
 
     except HTTPException:

@@ -349,10 +349,22 @@ When you mention another agent (like @backend), they will be automatically notif
 
         # Add context if provided
         if context:
+            # Add workspace instructions first (critical for file operations)
+            if context.get("workspace_instructions"):
+                prompt_parts.append(context["workspace_instructions"])
+                prompt_parts.append("")
+
             if context.get("conversation_history"):
                 prompt_parts.append("Previous conversation:")
                 for msg in context["conversation_history"][-5:]:  # Last 5 messages
                     prompt_parts.append(f"- {msg.get('author')}: {msg.get('content')}")
+                prompt_parts.append("")
+
+            if context.get("previous_task_outputs"):
+                prompt_parts.append("Previous task outputs (from tasks you depend on):")
+                for dep in context["previous_task_outputs"]:
+                    prompt_parts.append(f"- {dep.get('agent')} completed: {dep.get('task')}")
+                    prompt_parts.append(f"  Result: {dep.get('output', '')[:200]}...")
                 prompt_parts.append("")
 
             if context.get("files"):
@@ -365,7 +377,14 @@ When you mention another agent (like @backend), they will be automatically notif
                 prompt_parts.append(f"Project context: {context['project_info']}")
                 prompt_parts.append("")
 
+            # Add workflow context if present
+            if context.get("workflow_request"):
+                prompt_parts.append(f"Overall workflow goal: {context['workflow_request']}")
+                prompt_parts.append(f"This is task {context.get('task_number', '?')} of {context.get('total_tasks', '?')}")
+                prompt_parts.append("")
+
         # Add the actual message
+        prompt_parts.append("YOUR TASK:")
         prompt_parts.append(message)
 
         return "\n".join(prompt_parts)

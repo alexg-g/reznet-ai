@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import type { Agent } from '@/lib/types'
 import SystemPromptViewer from '@/components/SystemPromptViewer'
 import Sidebar from '@/components/Sidebar'
+import FileUpload from '@/components/FileUpload'
 
 export default function AgentDM() {
   const params = useParams()
@@ -254,9 +255,7 @@ export default function AgentDM() {
               }}
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 gap-1">
-              <button className="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200">
-                <span className="material-symbols-outlined">add_circle</span>
-              </button>
+              <FileUpload />
               <button className="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200">
                 <span className="material-symbols-outlined">sentiment_satisfied</span>
               </button>

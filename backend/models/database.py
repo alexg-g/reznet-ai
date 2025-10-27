@@ -32,6 +32,8 @@ class Agent(Base):
     persona = Column(JSONB, nullable=False)
     config = Column(JSONB, default={})
     is_active = Column(Boolean, default=True)
+    current_task_id = Column(UUID(as_uuid=True), nullable=True)  # Task queue: currently processing task
+    is_busy = Column(Boolean, default=False)  # Quick check for agent availability
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -182,3 +184,21 @@ class WorkflowTask(Base):
     workflow = relationship("Workflow", back_populates="workflow_tasks")
     agent = relationship("Agent")
     task = relationship("Task")  # Links to existing Task model if needed
+
+
+class UploadedFile(Base):
+    """Uploaded file model for file upload feature"""
+    __tablename__ = "uploaded_files"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    original_filename = Column(String(255), nullable=False)  # User's original filename
+    stored_filename = Column(String(255), nullable=False)    # UUID + extension for safe storage
+    workspace_path = Column(Text, nullable=False)            # Path in workspace: "uploads/YYYY-MM-DD/uuid.ext"
+    file_size = Column(Integer, nullable=False)              # Size in bytes
+    mime_type = Column(String(100), nullable=True)           # MIME type (e.g., "text/plain")
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=True)
+    uploaded_by = Column(String(100), default="local-user")  # User identifier (for future multi-user)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    message = relationship("Message")

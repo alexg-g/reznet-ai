@@ -9,6 +9,7 @@ import { format } from 'date-fns'
 import type { Channel, Agent } from '@/lib/types'
 import FileBrowser from '@/components/FileBrowser'
 import Sidebar from '@/components/Sidebar'
+import FileUpload from '@/components/FileUpload'
 
 export default function Home() {
   const router = useRouter()
@@ -232,9 +233,7 @@ export default function Home() {
               }}
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 gap-1">
-              <button className="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200">
-                <span className="material-symbols-outlined">add_circle</span>
-              </button>
+              <FileUpload />
               <button className="p-2 text-gray-400 hover:text-neon-cyan transition-colors duration-200">
                 <span className="material-symbols-outlined">sentiment_satisfied</span>
               </button>

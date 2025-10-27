@@ -28,6 +28,20 @@ Additional Backend-Specific Guidelines:
 - Use type hints and documentation
 - Consider database design and optimization
 - Implement RESTful API patterns
+
+**Your workspace directories:**
+- `backend/` - Main backend code
+- `backend/api/` - API endpoints and routes
+- `backend/models/` - Database models
+- `backend/services/` - Business logic
+
+**File creation example:**
+When asked to create an API endpoint, use:
+<tool_call name="write_file">
+  <path>backend/api/users.py</path>
+  <content>from fastapi import APIRouter
+...complete code here...</content>
+</tool_call>
 """
 
 
@@ -53,6 +67,20 @@ Additional Frontend-Specific Guidelines:
 - Follow modern CSS practices (Tailwind, CSS modules)
 - Ensure cross-browser compatibility
 - Focus on user experience and accessibility (WCAG)
+
+**Your workspace directories:**
+- `frontend/` - Main frontend code
+- `frontend/components/` - React components
+- `frontend/pages/` - Page-level components
+- `frontend/styles/` - CSS/styling files
+
+**File creation example:**
+When asked to create a component, use:
+<tool_call name="write_file">
+  <path>frontend/components/Button.tsx</path>
+  <content>import React from 'react';
+...complete code here...</content>
+</tool_call>
 """
 
 
@@ -79,6 +107,20 @@ Additional QA-Specific Guidelines:
 - Validate API contracts
 - Test for accessibility
 - Document test plans and results
+
+**Your workspace directories:**
+- `tests/` - Main test directory
+- `tests/unit/` - Unit tests
+- `tests/integration/` - Integration tests
+- `tests/e2e/` - End-to-end tests
+
+**File creation example:**
+When asked to write tests, use:
+<tool_call name="write_file">
+  <path>tests/unit/test_api.py</path>
+  <content>import pytest
+...complete test code here...</content>
+</tool_call>
 """
 
 
@@ -105,6 +147,19 @@ Additional DevOps-Specific Guidelines:
 - Optimize resource usage and costs
 - Document infrastructure and deployment processes
 - Plan for disaster recovery
+
+**Your workspace directories:**
+- `config/` - Configuration files (Docker, CI/CD, environment)
+- `scripts/` - Deployment and utility scripts
+- `docs/` - Infrastructure documentation
+
+**File creation example:**
+When asked to create deployment config, use:
+<tool_call name="write_file">
+  <path>config/Dockerfile</path>
+  <content>FROM python:3.11-slim
+...complete Dockerfile here...</content>
+</tool_call>
 """
 
 
@@ -152,13 +207,15 @@ Rules for task planning:
 7. Consider the logical flow: design → implement → test → deploy
 
 Example of a good plan:
-Task 1: @backend - Create User database model with email, password_hash, and created_at fields
-Task 2: @backend - Implement POST /api/auth/register endpoint with password hashing (depends on Task 1)
-Task 3: @backend - Implement POST /api/auth/login endpoint with JWT token generation (depends on Task 1)
-Task 4: @frontend - Create LoginForm component with email/password inputs and error handling
-Task 5: @frontend - Create RegistrationForm component with validation
-Task 6: @qa - Write unit tests for authentication endpoints (depends on Task 2, Task 3)
-Task 7: @qa - Write E2E tests for login and registration flows (depends on Task 4, Task 5)
+Task 1: @backend - Create User database model with email, password_hash, and created_at fields in backend/models/user.py
+Task 2: @backend - Implement POST /api/auth/register endpoint with password hashing in backend/api/auth.py (depends on Task 1)
+Task 3: @backend - Implement POST /api/auth/login endpoint with JWT token generation in backend/api/auth.py (depends on Task 1)
+Task 4: @frontend - Create LoginForm component with email/password inputs and error handling in frontend/components/LoginForm.tsx
+Task 5: @frontend - Create RegistrationForm component with validation in frontend/components/RegistrationForm.tsx
+Task 6: @qa - Write unit tests for authentication endpoints in tests/test_auth.py (depends on Task 2, Task 3)
+Task 7: @qa - Write E2E tests for login and registration flows in tests/e2e/test_auth_flow.py (depends on Task 4, Task 5)
+
+CRITICAL: Always specify the file path in task descriptions! This tells agents exactly what files to create.
 """
 
     async def process_message(

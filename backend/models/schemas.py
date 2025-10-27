@@ -259,3 +259,42 @@ class WSAgentStatus(BaseModel):
     agent_name: str
     status: str  # 'online', 'thinking', 'working', 'offline'
     current_task: Optional[str] = None
+
+
+# ============================================
+# File Upload Schemas
+# ============================================
+
+class UploadedFileBase(BaseModel):
+    """Base schema for uploaded files"""
+    original_filename: str
+    workspace_path: str
+    file_size: int
+    mime_type: Optional[str] = None
+
+
+class UploadedFileCreate(UploadedFileBase):
+    """Schema for creating uploaded file record"""
+    stored_filename: str
+    message_id: Optional[UUID] = None
+    uploaded_by: str = "local-user"
+
+
+class UploadedFileResponse(UploadedFileBase):
+    """Schema for uploaded file response"""
+    id: UUID
+    stored_filename: str
+    message_id: Optional[UUID] = None
+    uploaded_by: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class FileUploadResponse(BaseModel):
+    """Response for file upload API"""
+    success: bool
+    file: UploadedFileResponse
+    workspace_path: str
+    message: str

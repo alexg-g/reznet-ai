@@ -37,8 +37,22 @@ echo -e "${BLUE}[2/4]${NC} Starting MCP Filesystem server..."
 cd mcp-servers/filesystem
 npm start > ../../logs/mcp-filesystem.log 2>&1 &
 MCP_FS_PID=$!
-echo -e "      ${GREEN}✓${NC} MCP Filesystem server started (PID: $MCP_FS_PID)"
 cd ../..
+
+# Wait for MCP Filesystem server to be ready
+echo "      Waiting for MCP Filesystem server to be ready..."
+sleep 2
+RETRIES=10
+for i in $(seq 1 $RETRIES); do
+    if curl -s http://localhost:3001/health > /dev/null 2>&1; then
+        echo -e "      ${GREEN}✓${NC} MCP Filesystem server ready (PID: $MCP_FS_PID)"
+        break
+    fi
+    if [ $i -eq $RETRIES ]; then
+        echo -e "      ${YELLOW}⚠${NC}  MCP Filesystem server may not have started correctly. Check logs/mcp-filesystem.log"
+    fi
+    sleep 1
+done
 
 # Start MCP GitHub server (if token is configured)
 echo ""

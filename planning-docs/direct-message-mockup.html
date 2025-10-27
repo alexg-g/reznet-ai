@@ -7,156 +7,155 @@
   <meta name="Generator" content="Cocoa HTML Writer">
   <meta name="CocoaVersion" content="2487.7">
   <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; -webkit-text-stroke: #000000; min-height: 14.0px}
+    span.s1 {font-kerning: none}
   </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;html class="dark" lang="en"&gt;&lt;head&gt;</p>
-<p class="p1">&lt;meta charset="utf-8"/&gt;</p>
-<p class="p1">&lt;meta content="width=device-width, initial-scale=1.0" name="viewport"/&gt;</p>
-<p class="p1">&lt;title&gt;GRIDPULSE - Direct Message&lt;/title&gt;</p>
-<p class="p1">&lt;script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"&gt;&lt;/script&gt;</p>
-<p class="p1">&lt;link href="https://fonts.googleapis.com" rel="preconnect"/&gt;</p>
-<p class="p1">&lt;link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/&gt;</p>
-<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;amp;display=swap" rel="stylesheet"/&gt;</p>
-<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/&gt;</p>
-<p class="p1">&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>tailwind.config = {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>darkMode: "class",</p>
-<p class="p1"><span class="Apple-converted-space">            </span>theme: {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>extend: {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>colors: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"primary": "#0da6f2",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"background-light": "#f5f7f8",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"background-dark": "#101c22",</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>fontFamily: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"display": ["Space Grotesk", "sans-serif"]</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>borderRadius: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"DEFAULT": "0.125rem",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"lg": "0.25rem",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"xl": "0.5rem",</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>"full": "0.75rem"</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>},</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>boxShadow: {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'glow-cyan': '0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 15px #00FFFF',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'glow-pink': '0 0 5px #FF00FF, 0 0 10px #FF00FF, 0 0 15px #FF00FF',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>'glow-primary': '0 0 5px #0da6f2, 0 0 10px #0da6f2, 0 0 15px #0da6f2',</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>},</p>
-<p class="p1"><span class="Apple-converted-space">            </span>},</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar-track {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: transparent;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar-thumb {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #00FFFF;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 0 5px #00FFFF, 0 0 8px #00FFFF;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body class="bg-[#0D0D1A] font-display text-[#E0E0E0]"&gt;</p>
-<p class="p1">&lt;div class="relative flex h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-hidden"&gt;</p>
-<p class="p1">&lt;!-- Background Grid --&gt;</p>
-<p class="p1">&lt;div class="absolute inset-0 z-0 opacity-20" style="background-image:</p>
-<p class="p1"><span class="Apple-converted-space">            </span>linear-gradient(rgba(0, 255, 255, 0.3) 1px, transparent 1px),</p>
-<p class="p1"><span class="Apple-converted-space">            </span>linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-size: 50px 50px;"&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div class="relative z-10 flex h-full grow flex-col"&gt;</p>
-<p class="p1">&lt;!-- Header --&gt;</p>
-<p class="p1">&lt;header class="flex shrink-0 items-center justify-between border-b border-solid border-[#00FFFF]/30 px-6 py-4"&gt;</p>
-<p class="p1">&lt;div class="flex items-center gap-4"&gt;</p>
-<p class="p1">&lt;div class="relative"&gt;</p>
-<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDfBXl0eYRWs8U4hdFOUbWax_0vxBHvPc2B-vvUA1_D4dhPwpoAbfywir7Q_hraWxYCEIIz72G1v9cYaNw8u9irB3Mb-xPdXzAhaKQiL-NuV38wzY0omj_9rwDiTUZjdWmHvYjIQ8EdU6zKcj347gebAaKjS1iUfxOadZ_ZMLqVuTRuoDKh89KbTlKMLkJu2LkcTu0D02AOItFuNuagC4x9n8L61LpEDZzlHm9G-iGjjuOlhJhz3AsfkWGOnzlZp_W9iLiQvZnenHko");'&gt;&lt;/div&gt;</p>
-<p class="p1">&lt;div class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0D0D1A] bg-[#00FFFF] shadow-glow-cyan"&gt;&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div&gt;</p>
-<p class="p1">&lt;h2 class="text-[#E0E0E0] text-lg font-bold leading-tight tracking-[-0.015em] text-shadow-[0_0_8px_#00FFFF]"&gt;Jax 'Neon' Vector&lt;/h2&gt;</p>
-<p class="p1">&lt;p class="text-[#00FFFF] text-sm"&gt;Online&lt;/p&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div class="flex items-center gap-4"&gt;</p>
-<p class="p1">&lt;button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#00FFFF] transition-all hover:bg-[#00FFFF]/10 hover:shadow-glow-cyan"&gt;</p>
-<p class="p1">&lt;span class="material-symbols-outlined text-2xl"&gt;videocam&lt;/span&gt;</p>
-<p class="p1">&lt;/button&gt;</p>
-<p class="p1">&lt;button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#00FFFF] transition-all hover:bg-[#00FFFF]/10 hover:shadow-glow-cyan"&gt;</p>
-<p class="p1">&lt;span class="material-symbols-outlined text-2xl"&gt;search&lt;/span&gt;</p>
-<p class="p1">&lt;/button&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/header&gt;</p>
-<p class="p1">&lt;!-- Chat Log --&gt;</p>
-<p class="p1">&lt;main class="flex-1 overflow-y-auto px-6 py-4 space-y-6 glowing-scrollbar"&gt;</p>
-<p class="p1">&lt;!-- Received Message --&gt;</p>
-<p class="p1">&lt;div class="flex items-end gap-3 p-2"&gt;</p>
-<p class="p1">&lt;div class="relative shrink-0"&gt;</p>
-<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA-8N_p6N0boFyJfAbPY1SWtjL4oF6brh1zh2SbB1E6KFuXdAaS1pCOLED4Di9j3v_oP5Uz7oqFy2qS9s_F_2WtCXF0BF7MaT2lVafBB1ymeC5OulE_Ih7TKNfsjtmBqlSUpdfeRMLnxXzZUNt3Ba7aDrKxAWGJkXfIymBCYaPSt-I012LCwjuK8CWu1BXTVm7vJVrP5KXlyJ9js1N1swmSpYahS0pmMDsYNhxb5UWkhzm31U0nyt6GN6gfJNScoxhC5WzN9MzeqyhZ");'&gt;&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div class="flex flex-1 flex-col gap-1 items-start"&gt;</p>
-<p class="p1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#00FFFF]/50 bg-[#00FFFF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>Hey, did you get the latest data stream? The grid is buzzing about it.</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</p>
-<p class="p1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] ml-4"&gt;10:32 PM&lt;/p&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;!-- Sent Message --&gt;</p>
-<p class="p1">&lt;div class="flex items-end gap-3 p-2 justify-end"&gt;</p>
-<p class="p1">&lt;div class="flex flex-1 flex-col gap-1 items-end"&gt;</p>
-<p class="p1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#FF00FF]/50 bg-[#FF00FF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>Received and decrypted. The signal is clean. Looks like we're a go for the mainframe sync tonight.</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</p>
-<p class="p1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] mr-4"&gt;10:33 PM&lt;/p&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div class="relative shrink-0"&gt;</p>
-<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-pink" data-alt="Glowing avatar for user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfDdHk93JNaTGeMSqPRE2YwAYytUEwv2qNdJJo4pCKKeK3DrODswS-t0d_jXDe0C-v-2PJTnuV_5-E1J8Bj2hpmeRV3AJpH0elHEaYH6aLndbZRJZ9Z6IdPLI7rAoeE5nLJzB-e8UmjvvdVsVIeKPwH23wvYoiUnMVaY1V8WZD9ym41EUnNW7TuEUNWBXCyAibuKHDedxtIktfyu2bFVNZ2_nGKD2CkJfTEY84exwxPDLWxSdurXInB68Ap_vVkMQLGgF8BAYwXaMG");'&gt;&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;!-- Received Message --&gt;</p>
-<p class="p1">&lt;div class="flex items-end gap-3 p-2"&gt;</p>
-<p class="p1">&lt;div class="relative shrink-0"&gt;</p>
-<p class="p1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOTbH3rbYOr_drE3et5vUHPNAEA235DVYbIhJTRZlljXwmfuG7FYGpYuest9PgNjeU2QJ5vK9UKYTk7tRNOlVNSUP7C8poEkEn-RT5AU1YtsZnDm-0HXTJ72ZJcqgLvJRLIPkiEc5OGdQEnEnMCCzCQgAib_Rin5ChGYd3uvKgDpyqHbncTwdOrjkx2JzO68gC1ylAPf8YWnz0NxOhJiEVv7vNR6J1oi68GrmXqgQOiZPMrYkWHoaeYLi-CfMjigQsPpMeCyuJAG5k");'&gt;&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;div class="flex flex-1 flex-col gap-1 items-start"&gt;</p>
-<p class="p1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#00FFFF]/50 bg-[#00FFFF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>Perfect. I'm running diagnostics on my end now. Should be ready in a few cycles.</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</p>
-<p class="p1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] ml-4"&gt;10:34 PM&lt;/p&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/main&gt;</p>
-<p class="p1">&lt;!-- Composer --&gt;</p>
-<p class="p1">&lt;footer class="flex shrink-0 items-center px-6 py-4 gap-4 border-t border-[#00FFFF]/30"&gt;</p>
-<p class="p1">&lt;label class="flex w-full flex-1 items-stretch rounded-lg h-12 bg-transparent focus-within:border-[#00FFFF] focus-within:shadow-glow-cyan border-b-2 border-transparent transition-all"&gt;</p>
-<p class="p1">&lt;div class="flex w-full items-center bg-black/30 rounded-lg px-2"&gt;</p>
-<p class="p1">&lt;button class="flex items-center justify-center p-2 text-[#9D00FF] hover:text-[#FF00FF] transition-colors"&gt;</p>
-<p class="p1">&lt;span class="material-symbols-outlined"&gt;add_circle&lt;/span&gt;</p>
-<p class="p1">&lt;/button&gt;</p>
-<p class="p1">&lt;input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#E0E0E0] focus:outline-0 focus:ring-0 border-none bg-transparent h-full placeholder:text-[#E0E0E0]/50 text-base font-normal leading-normal" placeholder="Type your message..." value=""/&gt;</p>
-<p class="p1">&lt;div class="flex items-center gap-1 justify-end"&gt;</p>
-<p class="p1">&lt;button class="flex items-center justify-center p-2 text-[#9D00FF] hover:text-[#FF00FF] transition-colors"&gt;</p>
-<p class="p1">&lt;span class="material-symbols-outlined"&gt;sentiment_satisfied&lt;/span&gt;</p>
-<p class="p1">&lt;/button&gt;</p>
-<p class="p1">&lt;button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-[#00FFFF] text-black text-sm font-bold leading-normal shadow-glow-cyan hover:bg-white transition-all"&gt;</p>
-<p class="p1">&lt;span class="truncate"&gt;Send&lt;/span&gt;</p>
-<p class="p1">&lt;/button&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/label&gt;</p>
-<p class="p1">&lt;/footer&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p1">&lt;/body&gt;&lt;/html&gt;</p>
+<p class="p1"><span class="s1">&lt;html class="dark" lang="en"&gt;&lt;head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta charset="utf-8"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;meta content="width=device-width, initial-scale=1.0" name="viewport"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;title&gt;GRIDPULSE - Direct Message&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1">&lt;script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;link href="https://fonts.googleapis.com" rel="preconnect"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;amp;display=swap" rel="stylesheet"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>tailwind.config = {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>darkMode: "class",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>theme: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>extend: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>colors: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"primary": "#0da6f2",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"background-light": "#f5f7f8",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"background-dark": "#101c22",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>fontFamily: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"display": ["Space Grotesk", "sans-serif"]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>borderRadius: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"DEFAULT": "0.125rem",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"lg": "0.25rem",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"xl": "0.5rem",</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>"full": "0.75rem"</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>boxShadow: {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>'glow-cyan': '0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 15px #00FFFF',</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>'glow-pink': '0 0 5px #FF00FF, 0 0 10px #FF00FF, 0 0 15px #FF00FF',</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>'glow-primary': '0 0 5px #0da6f2, 0 0 10px #0da6f2, 0 0 15px #0da6f2',</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>width: 8px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar-track {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background: transparent;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.glowing-scrollbar::-webkit-scrollbar-thumb {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background-color: #00FFFF;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>border-radius: 4px;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>box-shadow: 0 0 5px #00FFFF, 0 0 8px #00FFFF;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body class="bg-[#0D0D1A] font-display text-[#E0E0E0]"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative flex h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-hidden"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Background Grid --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="absolute inset-0 z-0 opacity-20" style="background-image:</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>linear-gradient(rgba(0, 255, 255, 0.3) 1px, transparent 1px),</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>background-size: 50px 50px;"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative z-10 flex h-full grow flex-col"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Header --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;header class="flex shrink-0 items-center justify-between border-b border-solid border-[#00FFFF]/30 px-6 py-4"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-center gap-4"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDfBXl0eYRWs8U4hdFOUbWax_0vxBHvPc2B-vvUA1_D4dhPwpoAbfywir7Q_hraWxYCEIIz72G1v9cYaNw8u9irB3Mb-xPdXzAhaKQiL-NuV38wzY0omj_9rwDiTUZjdWmHvYjIQ8EdU6zKcj347gebAaKjS1iUfxOadZ_ZMLqVuTRuoDKh89KbTlKMLkJu2LkcTu0D02AOItFuNuagC4x9n8L61LpEDZzlHm9G-iGjjuOlhJhz3AsfkWGOnzlZp_W9iLiQvZnenHko");'&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0D0D1A] bg-[#00FFFF] shadow-glow-cyan"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;h2 class="text-[#E0E0E0] text-lg font-bold leading-tight tracking-[-0.015em] text-shadow-[0_0_8px_#00FFFF]"&gt;Jax 'Neon' Vector&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-[#00FFFF] text-sm"&gt;Online&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-center gap-4"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#00FFFF] transition-all hover:bg-[#00FFFF]/10 hover:shadow-glow-cyan"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;span class="material-symbols-outlined text-2xl"&gt;videocam&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[#00FFFF] transition-all hover:bg-[#00FFFF]/10 hover:shadow-glow-cyan"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;span class="material-symbols-outlined text-2xl"&gt;search&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/header&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Chat Log --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;main class="flex-1 overflow-y-auto px-6 py-4 space-y-6 glowing-scrollbar"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Received Message --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-end gap-3 p-2"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative shrink-0"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA-8N_p6N0boFyJfAbPY1SWtjL4oF6brh1zh2SbB1E6KFuXdAaS1pCOLED4Di9j3v_oP5Uz7oqFy2qS9s_F_2WtCXF0BF7MaT2lVafBB1ymeC5OulE_Ih7TKNfsjtmBqlSUpdfeRMLnxXzZUNt3Ba7aDrKxAWGJkXfIymBCYaPSt-I012LCwjuK8CWu1BXTVm7vJVrP5KXlyJ9js1N1swmSpYahS0pmMDsYNhxb5UWkhzm31U0nyt6GN6gfJNScoxhC5WzN9MzeqyhZ");'&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex flex-1 flex-col gap-1 items-start"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#00FFFF]/50 bg-[#00FFFF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>Hey, did you get the latest data stream? The grid is buzzing about it.</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] ml-4"&gt;10:32 PM&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Sent Message --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-end gap-3 p-2 justify-end"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex flex-1 flex-col gap-1 items-end"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#FF00FF]/50 bg-[#FF00FF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>Received and decrypted. The signal is clean. Looks like we're a go for the mainframe sync tonight.</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] mr-4"&gt;10:33 PM&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative shrink-0"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-pink" data-alt="Glowing avatar for user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfDdHk93JNaTGeMSqPRE2YwAYytUEwv2qNdJJo4pCKKeK3DrODswS-t0d_jXDe0C-v-2PJTnuV_5-E1J8Bj2hpmeRV3AJpH0elHEaYH6aLndbZRJZ9Z6IdPLI7rAoeE5nLJzB-e8UmjvvdVsVIeKPwH23wvYoiUnMVaY1V8WZD9ym41EUnNW7TuEUNWBXCyAibuKHDedxtIktfyu2bFVNZ2_nGKD2CkJfTEY84exwxPDLWxSdurXInB68Ap_vVkMQLGgF8BAYwXaMG");'&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Received Message --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-end gap-3 p-2"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="relative shrink-0"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shadow-glow-cyan" data-alt="Glowing avatar for Jax 'Neon' Vector" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOTbH3rbYOr_drE3et5vUHPNAEA235DVYbIhJTRZlljXwmfuG7FYGpYuest9PgNjeU2QJ5vK9UKYTk7tRNOlVNSUP7C8poEkEn-RT5AU1YtsZnDm-0HXTJ72ZJcqgLvJRLIPkiEc5OGdQEnEnMCCzCQgAib_Rin5ChGYd3uvKgDpyqHbncTwdOrjkx2JzO68gC1ylAPf8YWnz0NxOhJiEVv7vNR6J1oi68GrmXqgQOiZPMrYkWHoaeYLi-CfMjigQsPpMeCyuJAG5k");'&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex flex-1 flex-col gap-1 items-start"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-base font-normal leading-normal flex max-w-[calc(100%-4rem)] rounded-xl border border-[#00FFFF]/50 bg-[#00FFFF]/10 px-4 py-3 text-[#E0E0E0] backdrop-blur-sm"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>Perfect. I'm running diagnostics on my end now. Should be ready in a few cycles.</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;p class="text-[#9D00FF] text-xs font-normal leading-normal max-w-[360px] ml-4"&gt;10:34 PM&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/main&gt;</span></p>
+<p class="p1"><span class="s1">&lt;!-- Composer --&gt;</span></p>
+<p class="p1"><span class="s1">&lt;footer class="flex shrink-0 items-center px-6 py-4 gap-4 border-t border-[#00FFFF]/30"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;label class="flex w-full flex-1 items-stretch rounded-lg h-12 bg-transparent focus-within:border-[#00FFFF] focus-within:shadow-glow-cyan border-b-2 border-transparent transition-all"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex w-full items-center bg-black/30 rounded-lg px-2"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button class="flex items-center justify-center p-2 text-[#9D00FF] hover:text-[#FF00FF] transition-colors"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;span class="material-symbols-outlined"&gt;add_circle&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-[#E0E0E0] focus:outline-0 focus:ring-0 border-none bg-transparent h-full placeholder:text-[#E0E0E0]/50 text-base font-normal leading-normal" placeholder="Type your message..." value=""/&gt;</span></p>
+<p class="p1"><span class="s1">&lt;div class="flex items-center gap-1 justify-end"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button class="flex items-center justify-center p-2 text-[#9D00FF] hover:text-[#FF00FF] transition-colors"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;span class="material-symbols-outlined"&gt;sentiment_satisfied&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-[#00FFFF] text-black text-sm font-bold leading-normal shadow-glow-cyan hover:bg-white transition-all"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;span class="truncate"&gt;Send&lt;/span&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/label&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/footer&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;&lt;/html&gt;</span></p>
 </body>
 </html>

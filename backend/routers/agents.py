@@ -158,14 +158,14 @@ async def get_agent_system_prompt(agent_id: UUID, db: Session = Depends(get_db))
     Returns the complete system prompt including persona, tool instructions,
     and all system additions that the agent uses for LLM interactions.
     """
-    from agents.processor import get_agent_by_id
+    from agents.processor import get_agent_instance
 
     agent = db.query(Agent).filter(Agent.id == agent_id).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
 
     # Get agent instance to access system prompt
-    agent_instance = await get_agent_by_id(agent_id)
+    agent_instance = get_agent_instance(agent)
 
     if not agent_instance:
         raise HTTPException(status_code=500, detail="Failed to instantiate agent")
