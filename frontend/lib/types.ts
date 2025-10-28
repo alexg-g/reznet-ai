@@ -11,7 +11,7 @@ export interface Message {
   id: string
   channel_id: string
   author_id: string | null
-  author_type: 'user' | 'agent'
+  author_type: 'user' | 'agent' | 'system'
   author_name: string
   content: string
   thread_id: string | null

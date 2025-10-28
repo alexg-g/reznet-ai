@@ -51,9 +51,11 @@ export function useWebSocket() {
         addMessage({
           id: `system-${Date.now()}`,
           channel_id: data.channel_id,
+          author_id: null,
           author_type: 'system',
           author_name: 'System',
           content: data.message,
+          thread_id: null,
           created_at: new Date().toISOString(),
           metadata: {}
         })
