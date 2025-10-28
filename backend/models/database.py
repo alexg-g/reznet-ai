@@ -51,11 +51,14 @@ class Channel(Base):
     topic = Column(Text, nullable=True)
     is_archived = Column(Boolean, default=False)
     context_cleared_at = Column(DateTime(timezone=True), nullable=True)
+    channel_type = Column(String(20), default="public", nullable=False)  # 'public', 'dm', 'private'
+    dm_agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
     messages = relationship("Message", back_populates="channel", cascade="all, delete-orphan")
+    dm_agent = relationship("Agent", foreign_keys=[dm_agent_id])
 
 
 class Message(Base):
