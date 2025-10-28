@@ -1,10 +1,17 @@
 # RezNet AI - Local MVP
 
-> AI Agent Collaboration Platform for Software Development
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-green.svg)
+![Status](https://img.shields.io/badge/status-MVP-yellow.svg)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-RezNet AI is a Slack-like chat platform where developers orchestrate teams of AI agents to build software. Each agent has a specialized role (Backend Engineer, Frontend Developer, QA, DevOps, Orchestrator) and can be mentioned directly or work together.
+> Multi-Agent AI Collaboration Platform
+
+RezNet AI is a Slack-like chat platform where you orchestrate teams of specialized AI agents to tackle complex work. Start with our developer-focused agents (Backend, Frontend, QA, DevOps, Orchestrator), or build your own team for any domain - marketing, legal, research, and more.
 
 **Status**: Local MVP - Single User Development Environment
+
+🌐 **Website**: [reznet-ai-website.pages.dev](https://reznet-ai-website.pages.dev) (coming soon)
 
 ---
 
@@ -59,7 +66,7 @@ RezNet AI is a Slack-like chat platform where developers orchestrate teams of AI
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/reznet-ai.git
+git clone https://github.com/alexg-g/reznet-ai.git
 cd reznet-ai
 ```
 
@@ -267,6 +274,26 @@ Interactive API docs available at:
 - Cloud deployment
 - Usage analytics
 - Plugin system for custom agents
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's bug reports, feature requests, or code contributions, we'd love your help making RezNet AI better.
+
+### How to Contribute
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## 📣 Community
+
+- **Issues**: [GitHub Issues](https://github.com/alexg-g/reznet-ai/issues) - Bug reports & feature requests
+- **Discussions**: [GitHub Discussions](https://github.com/alexg-g/reznet-ai/discussions) - Questions & ideas
+- **Changelog**: Check [GitHub Releases](https://github.com/alexg-g/reznet-ai/releases)
 
 ## 📄 License
 
