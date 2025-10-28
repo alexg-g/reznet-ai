@@ -36,6 +36,14 @@ node_modules/
 *_rsa.pub
 *.pem
 
+# Secrets and credentials
+secrets/
+credentials.json
+*secret*.json
+*.secrets
+.env.production
+.env.development
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -91,9 +99,6 @@ build/
 # Logs
 *.log
 logs/
-
-# Project documentation (AI assistant context)
-CLAUDE.md
 
 # Development test scripts
 test_*.py
