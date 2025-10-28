@@ -1,5 +1,13 @@
 # Security Policy
 
+## Recent Security Updates
+
+**2025-10-28**: Security audit completed before public release
+- ✅ Removed all vulnerable dependencies (python-jose, lancedb)
+- ✅ Zero known vulnerabilities (verified with pip-audit)
+- ✅ Dependabot enabled for automated dependency monitoring
+- ✅ All secrets properly gitignored and not committed to repository
+
 ## Supported Versions
 
 We release patches for security vulnerabilities in the following versions:
@@ -173,13 +181,12 @@ We use automated tools to scan for vulnerabilities:
 
 **Python**:
 ```bash
-# Run safety check
-pip install safety
-safety check
+# Run pip-audit (recommended)
+cd backend && source venv/bin/activate
+pip-audit --desc
 
-# Or use pip-audit
-pip install pip-audit
-pip-audit
+# Run with stricter mode (fails on any vulnerability)
+pip-audit --strict
 ```
 
 **Node.js**:
@@ -190,6 +197,13 @@ npm audit
 # Fix automatically
 npm audit fix
 ```
+
+**Dependabot**:
+We use GitHub Dependabot for automated dependency updates:
+- Checks for security vulnerabilities daily
+- Opens PRs for dependency updates weekly
+- Groups related updates to reduce noise
+- Configured in `.github/dependabot.yml`
 
 ### Update Policy
 

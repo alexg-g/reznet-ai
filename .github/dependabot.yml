@@ -1,0 +1,111 @@
+# Dependabot configuration for automated dependency updates
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Backend Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "python"
+      - "backend"
+    # Group non-security updates to reduce PR noise
+    groups:
+      development-dependencies:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "ruff"
+          - "mypy*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Frontend dependencies (Next.js)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "frontend"
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "next"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # MCP Filesystem Server
+  - package-ecosystem: "npm"
+    directory: "/mcp-servers/filesystem"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "mcp-server"
+
+  # MCP GitHub Server
+  - package-ecosystem: "npm"
+    directory: "/mcp-servers/github"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "mcp-server"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions workflows (if any)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "alexg-g"
+    labels:
+      - "dependencies"
+      - "ci-cd"
