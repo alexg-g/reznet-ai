@@ -45,7 +45,7 @@ contextlib2==21.6.0
 crewai==1.2.1
 crewai-tools==1.2.1
 cryptography==46.0.3
-cyclonedx-python-lib==9.1.0
+cyclonedx-python-lib==11.4.0
 dataclasses-json==0.6.7
 decorator==5.2.1
 defusedxml==0.7.1
