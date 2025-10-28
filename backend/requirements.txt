@@ -186,7 +186,7 @@ pdfplumber==0.11.7
 perf_analyzer==0.1.0
 pexpect==4.9.0
 pfzy==0.3.4
-pgvector==0.2.5
+pgvector==0.4.1
 pillow==12.0.0
 pip-api==0.0.34
 pip-requirements-parser==32.0.1
