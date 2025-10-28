@@ -10,11 +10,13 @@ import type { Channel, Agent } from '@/lib/types'
 import FileBrowser from '@/components/FileBrowser'
 import Sidebar from '@/components/Sidebar'
 import FileUpload from '@/components/FileUpload'
+import HelpModal from '@/components/HelpModal'
 
 export default function Home() {
   const router = useRouter()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -158,7 +160,11 @@ export default function Home() {
             <button className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200">
               <span className="material-symbols-outlined">search</span>
             </button>
-            <button className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200">
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200"
+              title="Help & Usage Guide"
+            >
               <span className="material-symbols-outlined">info</span>
             </button>
           </div>
@@ -250,6 +256,9 @@ export default function Home() {
 
       {/* Workspace File Browser */}
       <FileBrowser />
+
+      {/* Help Modal */}
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }
