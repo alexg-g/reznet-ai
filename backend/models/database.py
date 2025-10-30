@@ -176,6 +176,24 @@ class WorkflowTask(Base):
     workflow = relationship("Workflow", back_populates="workflow_tasks")
 
 
+class UploadedFile(Base):
+    """Uploaded file model for file upload feature"""
+    __tablename__ = "uploaded_files"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    original_filename = Column(String(255), nullable=False)  # User's original filename
+    stored_filename = Column(String(255), nullable=False)    # UUID + extension for safe storage
+    workspace_path = Column(Text, nullable=False)            # Path in workspace: "uploads/YYYY-MM-DD/uuid.ext"
+    file_size = Column(Integer, nullable=False)              # Size in bytes
+    mime_type = Column(String(100), nullable=True)           # MIME type (e.g., "text/plain")
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=True)
+    uploaded_by = Column(String(100), default="local-user")  # User identifier (for future multi-user)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    message = relationship("Message")
+
+
 class AgentTemplate(Base):
     """
     Agent templates for Issue #18 - Custom agent creation
