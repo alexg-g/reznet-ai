@@ -166,7 +166,7 @@ class WorkflowTask(Base):
     order_index = Column(Integer, nullable=False)
     depends_on = Column(JSONB, default=list)  # List of task UUIDs
     status = Column(String(50), default="pending")
-    output = Column(Text, nullable=True)
+    output = Column(JSONB, nullable=True)
     error = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True), nullable=True)
@@ -174,6 +174,7 @@ class WorkflowTask(Base):
 
     # Relationships
     workflow = relationship("Workflow", back_populates="workflow_tasks")
+    agent = relationship("Agent")
 
 
 class UploadedFile(Base):
