@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { getAgentColor } from '@/lib/constants'
 import type { Channel, Agent, AgentStatus } from '@/lib/types'
 
@@ -23,6 +24,8 @@ export default function Sidebar({
   onChannelClick,
   onAgentClick,
 }: SidebarProps) {
+  const router = useRouter()
+
   // Filter out DM channels (they're just database storage, not UI elements)
   const regularChannels = channels.filter(ch => !ch.name.startsWith('dm-'))
 
@@ -75,9 +78,19 @@ export default function Sidebar({
           ))}
 
           {/* AI Agents Section */}
-          <p className="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 pt-6 pb-2">
-            AI Agents
-          </p>
+          <div className="flex items-center justify-between px-3 pt-6 pb-2">
+            <p className="text-electric-purple text-xs font-bold uppercase tracking-widest">
+              AI Agents
+            </p>
+            <button
+              onClick={() => router.push('/agents')}
+              className="text-electric-purple hover:text-neon-cyan transition-colors duration-200"
+              title="Manage agent templates"
+              aria-label="Manage agent templates"
+            >
+              <span className="material-symbols-outlined text-base">settings</span>
+            </button>
+          </div>
           {agents.map((agent) => {
             const colors = getAgentColor(agent.name)
             const status = agentStatuses[agent.name]

@@ -205,3 +205,24 @@ class UploadedFile(Base):
 
     # Relationships
     message = relationship("Message")
+
+
+class AgentTemplate(Base):
+    """Agent template model for custom agent creation (Issue #18)"""
+    __tablename__ = "agent_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), unique=True, nullable=False)  # Unique identifier (alphanumeric, lowercase)
+    display_name = Column(String(100), nullable=False)  # Human-readable display name
+    role = Column(String(200), nullable=False)  # Agent role/title
+    system_prompt = Column(Text, nullable=False)  # Base system prompt for agents
+    color = Column(String(7), nullable=True)  # Hex color (e.g., #FF0000)
+    icon = Column(String(10), nullable=True)  # Emoji or icon name
+    available_tools = Column(JSONB, default=list)  # List of MCP server names
+    llm_config = Column(JSONB, default=dict)  # Provider, model, temperature config
+    template_type = Column(String(50), default='custom')  # 'default', 'custom', 'community'
+    domain = Column(String(100), nullable=True)  # Category: software-dev, marketing, legal, etc.
+    is_public = Column(Boolean, default=False)  # Whether template is shared publicly
+    created_by = Column(String(100), nullable=True)  # User identifier (will be UUID FK in Phase 3)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
