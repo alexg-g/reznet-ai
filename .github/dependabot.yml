@@ -20,9 +20,7 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "python"
-      - "backend"
+      - "dependabot"
     # Group non-security updates to reduce PR noise
     groups:
       development-dependencies:
@@ -49,9 +47,7 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "javascript"
-      - "frontend"
+      - "dependabot"
     groups:
       react-ecosystem:
         patterns:
@@ -82,9 +78,7 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "javascript"
-      - "mcp-server"
+      - "dependabot"
 
   # MCP GitHub Server
   - package-ecosystem: "npm"
@@ -99,9 +93,7 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "javascript"
-      - "mcp-server"
+      - "dependabot"
 
   # Docker base images
   - package-ecosystem: "docker"
@@ -112,8 +104,7 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "docker"
+      - "dependabot"
 
   # GitHub Actions workflows (if any)
   - package-ecosystem: "github-actions"
@@ -124,5 +115,4 @@ updates:
     reviewers:
       - "alexg-g"
     labels:
-      - "dependencies"
-      - "ci-cd"
+      - "dependabot"
