@@ -1,5 +1,8 @@
 # Dependabot configuration for automated dependency updates
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+#
+# Philosophy: Fail fast on security. Auto-merge patches and security updates.
+# Major versions are manual to avoid breaking changes.
 
 version: 2
 updates:
@@ -7,9 +10,13 @@ updates:
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
-      interval: "weekly"
+      interval: "daily"  # Check daily for security patches
       day: "monday"
     open-pull-requests-limit: 10
+    # Ignore major version bumps (breaking changes need manual review)
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     reviewers:
       - "alexg-g"
     labels:
@@ -32,9 +39,13 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "daily"  # Check daily for security
       day: "monday"
     open-pull-requests-limit: 10
+    # Ignore major version bumps (breaking changes need manual review)
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     reviewers:
       - "alexg-g"
     labels:
@@ -62,9 +73,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/mcp-servers/filesystem"
     schedule:
-      interval: "weekly"
+      interval: "daily"
       day: "monday"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     reviewers:
       - "alexg-g"
     labels:
@@ -76,9 +90,12 @@ updates:
   - package-ecosystem: "npm"
     directory: "/mcp-servers/github"
     schedule:
-      interval: "weekly"
+      interval: "daily"
       day: "monday"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     reviewers:
       - "alexg-g"
     labels:
