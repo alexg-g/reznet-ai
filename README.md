@@ -1,5 +1,6 @@
 # RezNet AI - Local MVP
 
+![CI](https://github.com/alexg-g/reznet-ai/workflows/CI/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-green.svg)
 ![Status](https://img.shields.io/badge/status-MVP-yellow.svg)

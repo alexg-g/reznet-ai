@@ -96,7 +96,7 @@ async def _handle_message_send(sid, data, namespace='/'):
     """
     try:
         from core.database import SessionLocal
-        from models.database import Message
+        from models.database import Message, Channel
         from models.schemas import WSMessageType
         from uuid import UUID
         import datetime
@@ -135,19 +135,33 @@ async def _handle_message_send(sid, data, namespace='/'):
             await sio.emit('message_new', message_data, namespace='/ws')
 
             # Check if message mentions any agents
-            content_lower = data['content'].lower()
+            # For DM channels, auto-invoke the agent without requiring @mention
+            from models.database import Agent
+            channel = db.query(Channel).filter(Channel.id == message.channel_id).first()
             mentioned_agents = []
 
-            if '@backend' in content_lower:
-                mentioned_agents.append('backend')
-            if '@frontend' in content_lower:
-                mentioned_agents.append('frontend')
-            if '@qa' in content_lower:
-                mentioned_agents.append('qa')
-            if '@devops' in content_lower:
-                mentioned_agents.append('devops')
-            if '@orchestrator' in content_lower or (not mentioned_agents and len(content_lower) > 10):
-                mentioned_agents.append('orchestrator')
+            if channel and channel.channel_type == "dm" and channel.dm_agent_id:
+                # DM channel - auto-invoke the associated agent
+                dm_agent = db.query(Agent).filter(Agent.id == channel.dm_agent_id).first()
+                if dm_agent and dm_agent.is_active:
+                    # Extract agent name without @ prefix for processor
+                    agent_name = dm_agent.name.replace('@', '')
+                    mentioned_agents.append(agent_name)
+                    logger.info(f"Auto-invoking agent from DM channel: {dm_agent.name} (id: {dm_agent.id})")
+            else:
+                # Regular channel - check for explicit @mentions in content
+                content_lower = data['content'].lower()
+
+                if '@backend' in content_lower:
+                    mentioned_agents.append('backend')
+                if '@frontend' in content_lower:
+                    mentioned_agents.append('frontend')
+                if '@qa' in content_lower:
+                    mentioned_agents.append('qa')
+                if '@devops' in content_lower:
+                    mentioned_agents.append('devops')
+                if '@orchestrator' in content_lower or (not mentioned_agents and len(content_lower) > 10):
+                    mentioned_agents.append('orchestrator')
 
             # Process agent responses asynchronously
             if mentioned_agents:
