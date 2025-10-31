@@ -141,7 +141,9 @@ async def get_agent_dm_channel(agent_id: UUID, db: Session = Depends(get_db)):
         dm_channel = Channel(
             name=dm_channel_name,
             topic=f"Direct message with {agent.name}",
-            is_archived=False
+            is_archived=False,
+            channel_type="dm",
+            dm_agent_id=agent.id
         )
         db.add(dm_channel)
         db.commit()
