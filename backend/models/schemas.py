@@ -15,6 +15,8 @@ from uuid import UUID
 class ChannelBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     topic: Optional[str] = None
+    channel_type: str = "public"  # 'public', 'dm', 'private'
+    dm_agent_id: Optional[UUID] = None
 
 
 class ChannelCreate(ChannelBase):

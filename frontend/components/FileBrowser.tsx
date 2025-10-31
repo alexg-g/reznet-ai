@@ -13,7 +13,7 @@ interface FileItem {
 export default function FileBrowser() {
   const [files, setFiles] = useState<FileItem[]>([])
   const [loading, setLoading] = useState(false)
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState<string>('')
 
   // Fetch files from workspace

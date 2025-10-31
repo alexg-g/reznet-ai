@@ -37,7 +37,9 @@ def ensure_dm_channels(db: Session) -> None:
             dm_channel = Channel(
                 name=dm_channel_name,
                 topic=f"Direct message with {agent.name}",
-                is_archived=False
+                is_archived=False,
+                channel_type="dm",
+                dm_agent_id=agent.id
             )
             db.add(dm_channel)
             created_count += 1

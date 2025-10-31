@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { getAgentColor } from '@/lib/constants'
 import type { Channel, Agent, AgentStatus } from '@/lib/types'
 
@@ -30,8 +31,14 @@ export default function Sidebar({
       <div className="flex h-full flex-col p-4">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-6 p-2">
-          <div className="bg-gradient-to-br from-neon-cyan to-electric-purple rounded-lg size-10 shadow-glow-cyan flex items-center justify-center">
-            <span className="text-white font-bold text-xl">R</span>
+          <div className="rounded-lg size-10 flex items-center justify-center">
+            <Image
+              src="/badge.png"
+              alt="RezNet AI Logo"
+              width={40}
+              height={40}
+              className="rounded-lg"
+            />
           </div>
           <div className="flex flex-col">
             <h1 className="text-white text-base font-bold leading-normal">RezNet AI</h1>

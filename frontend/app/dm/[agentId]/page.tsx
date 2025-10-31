@@ -10,6 +10,7 @@ import type { Agent } from '@/lib/types'
 import SystemPromptViewer from '@/components/SystemPromptViewer'
 import Sidebar from '@/components/Sidebar'
 import FileUpload from '@/components/FileUpload'
+import HelpModal from '@/components/HelpModal'
 
 export default function AgentDM() {
   const params = useParams()
@@ -19,6 +20,7 @@ export default function AgentDM() {
   const [input, setInput] = useState('')
   const [agent, setAgent] = useState<Agent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -85,6 +87,27 @@ export default function AgentDM() {
     const dmChannel = dmChannels[agentId]
     if (!input.trim() || !dmChannel) return
 
+    // Check for /clear slash command
+    if (input.trim() === '/clear') {
+      try {
+        const response = await fetch(`${API_URL}/api/channels/${dmChannel.id}/clear`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          console.error('Failed to clear DM context')
+        }
+        // Context will be cleared via WebSocket event
+      } catch (error) {
+        console.error('Error clearing DM context:', error)
+      }
+      setInput('')
+      return
+    }
+
     sendMessage(dmChannel.id, input)
     setInput('')
   }
@@ -126,7 +149,7 @@ export default function AgentDM() {
       />
 
       {/* System Prompt Viewer - LEFT side (collapsible) */}
-      <SystemPromptViewer agentId={agentId} isOpen={true} />
+      <SystemPromptViewer agentId={agentId} isOpen={false} />
 
       {/* Main DM Area */}
       <main className="flex flex-1 flex-col h-screen">
@@ -169,7 +192,11 @@ export default function AgentDM() {
             <button className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200">
               <span className="material-symbols-outlined">search</span>
             </button>
-            <button className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200">
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              className="p-2 text-gray-300 hover:text-neon-cyan transition-colors duration-200"
+              title="Help & Usage Guide"
+            >
               <span className="material-symbols-outlined">info</span>
             </button>
           </div>
@@ -269,6 +296,9 @@ export default function AgentDM() {
           </div>
         </div>
       </main>
+
+      {/* Help Modal */}
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }
