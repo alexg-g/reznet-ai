@@ -14,6 +14,8 @@ import type { Channel, Agent } from '@/lib/types'
 // These components are loaded on-demand to reduce initial bundle size
 // Sidebar is always visible, so keep it synchronous for better UX
 import Sidebar from '@/components/Sidebar'
+// ErrorMessage: Synchronous import for error handling (Issue #46)
+import ErrorMessage from '@/components/ErrorMessage'
 
 // MessageContent: Heavy component with markdown rendering (~65KB)
 // Lazy loaded on-demand when messages contain markdown/code
@@ -57,6 +59,7 @@ export default function Home() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [retryingMessages, setRetryingMessages] = useState<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -165,6 +168,38 @@ export default function Home() {
     setInput('')
   }
 
+  // Retry failed agent response
+  const handleRetryMessage = async (errorMessageId: string) => {
+    if (!currentChannelId) return
+
+    // Find the error message
+    const errorMsg = currentMessages.find(m => m.id === errorMessageId)
+    if (!errorMsg || !errorMsg.metadata?.in_reply_to) return
+
+    // Find the original user message
+    const originalMsg = currentMessages.find(m => m.id === errorMsg.metadata.in_reply_to)
+    if (!originalMsg) return
+
+    // Mark as retrying
+    setRetryingMessages(prev => new Set(prev).add(errorMessageId))
+
+    try {
+      // Re-send the original user message
+      sendMessage(currentChannelId, originalMsg.content)
+    } catch (error) {
+      console.error('Error retrying message:', error)
+    } finally {
+      // Remove from retrying set after a delay (allow for agent response)
+      setTimeout(() => {
+        setRetryingMessages(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(errorMessageId)
+          return newSet
+        })
+      }, 2000)
+    }
+  }
+
   const currentChannel = channels.find(c => c.id === currentChannelId)
   const currentMessages = currentChannelId ? messages[currentChannelId] || [] : []
 
@@ -227,7 +262,29 @@ export default function Home() {
           <div className="space-y-6">
             {currentMessages.map((msg, i) => {
               const colors = msg.author_type === 'agent' ? getAgentColor(msg.author_name) : null
+              const isError = msg.metadata?.error === true
 
+              // Render error messages with ErrorMessage component
+              if (isError) {
+                return (
+                  <ErrorMessage
+                    key={msg.id}
+                    error={{
+                      message: msg.content,
+                      retryable: msg.metadata?.retryable || false,
+                      error_type: msg.metadata?.error_type,
+                      provider: msg.metadata?.provider,
+                      model: msg.metadata?.model
+                    }}
+                    agentName={msg.author_name}
+                    agentColor={colors?.hex || '#FF6B00'}
+                    onRetry={() => handleRetryMessage(msg.id)}
+                    isRetrying={retryingMessages.has(msg.id)}
+                  />
+                )
+              }
+
+              // Render normal messages
               return (
                 <div key={msg.id} className="flex gap-4 message-fade-in">
                   <div className={`size-10 flex-shrink-0 rounded-full bg-gradient-to-br flex items-center justify-center ${

@@ -17,6 +17,11 @@ from agents.specialists import (
     OrchestratorAgent
 )
 from utils.text_parsing import extract_mentions
+from core.error_handling import (
+    LLMError,
+    format_user_friendly_error,
+    structured_log_error
+)
 
 logger = logging.getLogger(__name__)
 
@@ -505,19 +510,45 @@ async def process_agent_message(
                         )
 
             except Exception as e:
-                logger.error(f"Error processing agent {agent_name}: {e}")
-
                 # Mark agent as available (release from busy state)
                 mark_agent_available(agent_record.id, db)
 
-                # Send error message
+                # Log structured error with full context
+                structured_log_error(e, {
+                    "agent_name": agent_name,
+                    "agent_id": str(agent_record.id),
+                    "channel_id": str(channel_id),
+                    "message_id": str(message_id),
+                    "content_length": len(content),
+                    "depth": depth
+                })
+
+                # Format user-friendly error message (never show stack traces)
+                user_message = format_user_friendly_error(e, agent_record.name)
+
+                # Prepare error metadata with retryability flag
+                error_metadata = {
+                    'error': True,
+                    'in_reply_to': str(message_id),
+                    'retryable': isinstance(e, LLMError) and e.retryable
+                }
+
+                # Add detailed error info for retryable errors
+                if isinstance(e, LLMError):
+                    error_metadata.update({
+                        'error_type': e.error_type.value,
+                        'provider': e.provider,
+                        'model': e.model
+                    })
+
+                # Send error message to chat
                 error_message = Message(
                     channel_id=channel_id,
                     author_id=agent_record.id,
                     author_type='agent',
                     author_name=agent_record.name,
-                    content=f"I encountered an error: {str(e)}",
-                    msg_metadata={'error': str(e), 'in_reply_to': str(message_id)}
+                    content=user_message,
+                    msg_metadata=error_metadata
                 )
                 db.add(error_message)
                 db.commit()
