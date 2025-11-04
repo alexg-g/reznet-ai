@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 import time
 import logging
 
-from routers import channels, agents, tasks, workflows, workspace, uploads, websocket_stats
+from routers import channels, agents, tasks, workflows, workspace, uploads, websocket_stats, agent_templates
 from websocket import manager as websocket_manager  # Import full module to register event handlers
 from websocket.manager import socket_app
 from core.database import engine, Base
@@ -178,6 +178,7 @@ app.mount("/socket.io", socket_app)
 # Include routers
 app.include_router(channels.router, prefix="/api", tags=["channels"])
 app.include_router(agents.router, prefix="/api", tags=["agents"])
+app.include_router(agent_templates.router, prefix="/api", tags=["agent-templates"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(workflows.router, prefix="/api", tags=["workflows"])
 app.include_router(workspace.router, tags=["workspace"])

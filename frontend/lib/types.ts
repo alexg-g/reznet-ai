@@ -55,3 +55,6 @@ export interface AgentSystemPrompt {
   model: string
   tools_enabled: boolean
 }
+
+// Export AgentTemplate types
+export type { AgentTemplate, AgentTemplateFormData } from '@/types/agentTemplate'

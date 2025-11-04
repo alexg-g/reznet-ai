@@ -1,4 +1,5 @@
 # Development and Testing Dependencies for RezNet AI
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
 
 # Testing framework
 pytest>=8.4.0
@@ -10,16 +11,23 @@ pytest-timeout>=2.2.0
 # Load testing
 aiohttp>=3.9.0
 
-# Code quality
-ruff>=0.6.0
-black>=24.0.0
-mypy>=1.11.0
+# Security scanning
 bandit>=1.7.0
 
-# Type stubs
-types-redis>=4.6.0
+# Code quality and formatting
+black>=24.0.0
+mypy>=1.11.0
+ruff>=0.6.0
+
+# Pre-commit hooks
+pre-commit>=3.5.0
+
+# Type stubs for type checking
 types-aiofiles>=23.2.0
+types-PyYAML>=6.0.12
+types-redis>=4.6.0
+types-requests>=2.31.0
 
 # Additional testing utilities
-httpx>=0.27.0  # Already in main requirements, but listed for completeness
 faker>=22.0.0  # For generating test data
+httpx>=0.27.0  # Already in main requirements, but listed for completeness
