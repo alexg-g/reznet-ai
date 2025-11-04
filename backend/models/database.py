@@ -6,6 +6,7 @@ from sqlalchemy import Column, String, Boolean, Text, DateTime, ForeignKey, Inte
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from pgvector.sqlalchemy import Vector
 import uuid
 
 from core.database import Base
@@ -100,57 +101,58 @@ class Task(Base):
 
 
 class AgentMemory(Base):
-    """Agent memory model for RAG"""
+    """
+    Agent memory model for semantic/RAG-based long-term memory
+
+    Memory Types:
+    - conversation: Chat messages and interactions
+    - decision: Important decisions made
+    - entity: Extracted entities (people, files, concepts)
+    - summary: Condensed summaries of older context
+    - tool_use: Record of tool calls and results
+    """
     __tablename__ = "agent_memories"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="CASCADE"))
-    content = Column(Text, nullable=True)
-    embedding = Column(String, nullable=True)  # pgvector type
-    memory_type = Column(String(50), default="conversation")
-    mem_metadata = Column("metadata", JSONB, default={})
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="CASCADE"), nullable=False)
+    channel_id = Column(UUID(as_uuid=True), ForeignKey("channels.id", ondelete="CASCADE"), nullable=True)
+
+    # Content
+    content = Column(Text, nullable=False)
+    embedding = Column(Vector(1536), nullable=True)  # OpenAI text-embedding-3-small: 1536 dims
+
+    # Memory classification
+    memory_type = Column(String(50), default="conversation")  # conversation, decision, entity, summary, tool_use
+    importance = Column(Integer, default=5)  # 1-10 scale, affects retrieval priority
+
+    # Metadata
+    mem_metadata = Column("metadata", JSONB, default={})  # {message_id, author, tool_name, entities, etc.}
+
+    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    accessed_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    access_count = Column(Integer, default=0)  # Track usage for importance scoring
 
     # Relationships
     agent = relationship("Agent", back_populates="memories")
 
 
 class Workflow(Base):
-    """Multi-agent workflow model"""
+    """Workflow model for multi-agent orchestration"""
     __tablename__ = "workflows"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    # Workflow metadata
-    description = Column(Text, nullable=False)  # User's original request
-    orchestrator_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"))
-    channel_id = Column(UUID(as_uuid=True), ForeignKey("channels.id"))
-
-    # State
-    status = Column(String(50), default="planning")
-    # Status: planning, executing, completed, failed, cancelled
-
-    # Plan and results
-    plan = Column(JSONB, nullable=True)
-    # Stores structured task breakdown from orchestrator
-
-    results = Column(JSONB, nullable=True)
-    # Stores aggregated results from all tasks
-
-    # Metadata
-    error = Column(Text, nullable=True)  # Error message if failed
-    workflow_metadata = Column("metadata", JSONB, default={})
-
-    # Timestamps
+    description = Column(Text, nullable=False)
+    orchestrator_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"), nullable=False)
+    channel_id = Column(UUID(as_uuid=True), ForeignKey("channels.id"), nullable=True)
+    status = Column(String(50), default="pending")  # pending, planning, executing, completed, failed
+    execution_strategy = Column(String(50), default="sequential")  # sequential, parallel, dag
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    orchestrator = relationship("Agent", foreign_keys=[orchestrator_id])
-    channel = relationship("Channel")
-    workflow_tasks = relationship("WorkflowTask", back_populates="workflow",
-                                   cascade="all, delete-orphan")
+    workflow_tasks = relationship("WorkflowTask", back_populates="workflow", cascade="all, delete-orphan")
 
 
 class WorkflowTask(Base):
@@ -158,27 +160,14 @@ class WorkflowTask(Base):
     __tablename__ = "workflow_tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"))
-    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
-
-    # Task definition
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False)
     description = Column(Text, nullable=False)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"))
-    order_index = Column(Integer, nullable=False)  # Execution order
-
-    # Dependencies
-    depends_on = Column(JSONB, default=[])  # Array of workflow_task IDs this depends on
-
-    # State
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id"), nullable=False)
+    order_index = Column(Integer, nullable=False)
+    depends_on = Column(JSONB, default=list)  # List of task UUIDs
     status = Column(String(50), default="pending")
-    # Status: pending, ready, in_progress, completed, failed, skipped
-
-    # Results
     output = Column(JSONB, nullable=True)
     error = Column(Text, nullable=True)
-    task_metadata = Column("metadata", JSONB, default={})
-
-    # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
@@ -186,7 +175,6 @@ class WorkflowTask(Base):
     # Relationships
     workflow = relationship("Workflow", back_populates="workflow_tasks")
     agent = relationship("Agent")
-    task = relationship("Task")  # Links to existing Task model if needed
 
 
 class UploadedFile(Base):
@@ -205,3 +193,27 @@ class UploadedFile(Base):
 
     # Relationships
     message = relationship("Message")
+
+
+class AgentTemplate(Base):
+    """
+    Agent templates for Issue #18 - Custom agent creation
+    Allows users to create custom agents with their own system prompts
+    """
+    __tablename__ = "agent_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), unique=True, nullable=False)  # Unique identifier (alphanumeric, lowercase)
+    display_name = Column(String(100), nullable=False)  # Human-readable display name
+    role = Column(String(200), nullable=False)  # Agent role/title
+    system_prompt = Column(Text, nullable=False)  # Base system prompt for agents
+    color = Column(String(7), nullable=True)  # Hex color (e.g., #FF0000)
+    icon = Column(String(10), nullable=True)  # Emoji or icon name
+    available_tools = Column(JSONB, default=list)  # List of MCP server names
+    llm_config = Column(JSONB, default=dict)  # Provider, model, temperature config
+    template_type = Column(String(50), default='custom')  # 'default', 'custom', 'community'
+    domain = Column(String(100), nullable=True)  # Category: software-dev, marketing, legal, etc.
+    is_public = Column(Boolean, default=False)  # Whether template is shared publicly
+    created_by = Column(String(100), nullable=True)  # User ID or 'system'
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

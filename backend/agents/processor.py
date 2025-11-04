@@ -266,10 +266,76 @@ async def process_agent_message(
             try:
                 # Special handling for orchestrator: Use workflow system for complex tasks
                 if agent_record.agent_type == "orchestrator":
+                    # Check if this is a complex task that needs workflow orchestration
+                    message_lower = content.lower()
+                    orchestration_keywords = [
+                        'build', 'create', 'implement', 'develop', 'feature',
+                        'application', 'system', 'project', 'integrate', 'design',
+                        'refactor', 'deploy', 'setup', 'configure'
+                    ]
+
+                    needs_workflow = (
+                        any(keyword in message_lower for keyword in orchestration_keywords) and
+                        len(message_lower.split()) > 5
+                    )
+
+                    if not needs_workflow:
+                        # Simple question/greeting - respond normally without workflow
+                        logger.info(f"Orchestrator responding directly (no workflow needed): {content[:100]}")
+                        # Process as regular agent
+                        agent = get_agent_instance(agent_record)
+
+                        if agent is None:
+                            logger.error(f"Could not load agent {agent_record.name}")
+                            response = "I encountered an error loading my configuration. Please try again."
+                        else:
+                            # Send typing indicator
+                            await manager.broadcast('agent_typing', {
+                                'agent': agent_record.name,
+                                'channel_id': str(channel_id)
+                            })
+
+                            # Process message
+                            response = await agent.process_message(content, context)
+
+                        # Create response message
+                        response_msg = Message(
+                            channel_id=channel_id,
+                            author_id=agent_record.id,
+                            author_type='agent',
+                            author_name=agent_record.name,
+                            content=response,
+                            metadata={'in_reply_to': str(message_id)}
+                        )
+                        db.add(response_msg)
+                        db.commit()
+                        db.refresh(response_msg)
+
+                        await manager.broadcast('message_new', {
+                            'id': str(response_msg.id),
+                            'channel_id': str(response_msg.channel_id),
+                            'author_type': response_msg.author_type,
+                            'author_name': response_msg.author_name,
+                            'content': response_msg.content,
+                            'created_at': response_msg.created_at.isoformat(),
+                            'metadata': response_msg.msg_metadata
+                        })
+
+                        mark_agent_available(agent_record.id, db)
+
+                        # Clear typing indicator
+                        await manager.broadcast('agent_status', {
+                            'agent_name': f"@{agent_name}",
+                            'status': 'online'
+                        })
+
+                        return
+
+                    # Complex task - create workflow
                     # Import here to avoid circular dependency
                     from agents.workflow_orchestrator import WorkflowOrchestrator
 
-                    logger.info(f"Orchestrator triggered via chat, creating workflow for: {content[:100]}")
+                    logger.info(f"Orchestrator creating workflow for complex task: {content[:100]}")
 
                     # Create workflow orchestrator
                     workflow_orchestrator = WorkflowOrchestrator(manager)

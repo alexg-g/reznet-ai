@@ -71,7 +71,7 @@ class LLMClient:
             import httpx
             self.client = httpx.AsyncClient(
                 base_url=settings.OLLAMA_HOST,
-                timeout=httpx.Timeout(60.0)  # 60 second timeout for local models
+                timeout=httpx.Timeout(180.0)  # 3 minute timeout for local models (can be slow with concurrent requests)
             )
             logger.info(f"Initialized Ollama client with model: {self.model}")
         except ImportError:

@@ -7,6 +7,7 @@ python-socketio>=5.11.0
 sqlalchemy>=2.0.30
 psycopg2-binary>=2.9.9
 alembic>=1.13.0
+pgvector>=0.2.4  # Vector similarity search for semantic memory
 
 # Configuration & validation
 pydantic>=2.9.0
