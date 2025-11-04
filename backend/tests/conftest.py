@@ -1,19 +1,26 @@
 """
-Pytest configuration and fixtures for backend tests.
+Pytest configuration and fixtures for RezNet AI tests
 
 Provides:
 - Async test client
 - Test database session
 - Database setup/teardown
 - Mock authentication
+- Cache manager
+- Mock agents
+- Performance tracking
 """
 
-import asyncio
 import pytest
+import asyncio
 from typing import AsyncGenerator, Generator
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
+from httpx import AsyncClient
+import time
+import logging
 import os
 
 # Set test environment
@@ -24,12 +31,16 @@ os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost/r
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
-from models.database import Base
+from core.database import Base, get_db
+from core.cache import CacheManager
 from core.config import settings
+from main import app
+from models.database import Agent, Channel, AgentTemplate
+
+logger = logging.getLogger(__name__)
 
 
-# Override database URL for tests
+# Test database URL
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost/reznet_test"
 
 
@@ -84,7 +95,6 @@ async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db():
         yield db
 
-    from backend.core.database import get_db
     app.dependency_overrides[get_db] = override_get_db
 
     async with AsyncClient(app=app, base_url="http://test") as ac:
@@ -116,11 +126,106 @@ def auth_headers(mock_user):
     }
 
 
+@pytest.fixture(scope="function")
+def cache_manager():
+    """Create a cache manager instance for testing"""
+    cache = CacheManager()
+    cache.reset_metrics()
+    yield cache
+    cache.flush_all()
+
+
+@pytest.fixture(scope="function")
+def performance_tracker():
+    """
+    Track performance metrics during tests
+
+    Usage:
+        def test_something(performance_tracker):
+            with performance_tracker.measure("operation_name"):
+                # do something
+
+            assert performance_tracker.get_duration("operation_name") < 1000  # ms
+    """
+    class PerformanceTracker:
+        def __init__(self):
+            self.measurements = {}
+            self.current_operation = None
+            self.start_time = None
+
+        def measure(self, operation: str):
+            """Context manager for measuring operation duration"""
+            class MeasureContext:
+                def __init__(self, tracker, op):
+                    self.tracker = tracker
+                    self.operation = op
+
+                def __enter__(self):
+                    self.tracker.start_time = time.perf_counter()
+                    self.tracker.current_operation = self.operation
+                    return self
+
+                def __exit__(self, exc_type, exc_val, exc_tb):
+                    duration = (time.perf_counter() - self.tracker.start_time) * 1000
+                    self.tracker.measurements[self.operation] = duration
+                    self.tracker.current_operation = None
+                    self.tracker.start_time = None
+
+            return MeasureContext(self, operation)
+
+        def get_duration(self, operation: str) -> float:
+            """Get duration in milliseconds"""
+            return self.measurements.get(operation, 0.0)
+
+        def get_all_measurements(self) -> dict:
+            """Get all measurements"""
+            return self.measurements.copy()
+
+        def assert_duration(self, operation: str, max_ms: float):
+            """Assert operation completed within max_ms"""
+            duration = self.get_duration(operation)
+            assert duration <= max_ms, f"{operation} took {duration:.2f}ms (max: {max_ms}ms)"
+
+    return PerformanceTracker()
+
+
+@pytest.fixture(scope="function")
+def mock_agent_data():
+    """Mock agent data for testing"""
+    return {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "name": "@test-agent",
+        "agent_type": "custom",
+        "persona": {
+            "role": "Test Agent",
+            "goal": "Testing functionality",
+            "backstory": "A test agent for automated testing"
+        },
+        "config": {
+            "provider": "anthropic",
+            "model": "claude-3-5-sonnet-20241022",
+            "temperature": 0.7,
+            "max_tokens": 1000
+        },
+        "is_active": True,
+        "is_busy": False
+    }
+
+
+@pytest.fixture(scope="function")
+def mock_message_data():
+    """Mock message data for testing"""
+    return {
+        "channel_id": "00000000-0000-0000-0000-000000000001",
+        "author_type": "user",
+        "author_name": "Test User",
+        "content": "Test message content"
+    }
+
+
 @pytest.fixture
 async def seed_default_data(db: AsyncSession):
     """Seed database with default data for tests."""
-    from backend.models.database import Agent, Channel, AgentTemplate
-
     # Create default agents
     default_agents = [
         Agent(
@@ -240,4 +345,10 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers",
         "unit: marks tests as unit tests",
+    )
+    config.addinivalue_line(
+        "markers", "performance: mark test as a performance test"
+    )
+    config.addinivalue_line(
+        "markers", "load: mark test as a load test"
     )

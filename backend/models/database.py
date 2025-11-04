@@ -2,7 +2,7 @@
 SQLAlchemy Database Models
 """
 
-from sqlalchemy import Column, String, Boolean, Text, DateTime, ForeignKey, Integer, JSON, func
+from sqlalchemy import Column, String, Boolean, Text, DateTime, ForeignKey, Integer, JSON, func, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -42,6 +42,14 @@ class Agent(Base):
     tasks = relationship("Task", back_populates="agent")
     memories = relationship("AgentMemory", back_populates="agent", cascade="all, delete-orphan")
 
+    # Indexes for query optimization (Issue #47)
+    __table_args__ = (
+        Index('idx_agents_name', 'name'),  # Lookup by name (e.g., @orchestrator)
+        Index('idx_agents_type', 'agent_type'),  # Filter by type
+        Index('idx_agents_active', 'is_active'),  # Filter active agents
+        Index('idx_agents_type_active', 'agent_type', 'is_active'),  # Combined filter
+    )
+
 
 class Channel(Base):
     """Channel model"""
@@ -79,6 +87,14 @@ class Message(Base):
     # Relationships
     channel = relationship("Channel", back_populates="messages")
     thread_replies = relationship("Message", remote_side=[id])
+
+    # Indexes for query optimization (Issue #47)
+    __table_args__ = (
+        Index('idx_messages_channel_id', 'channel_id'),  # Fetch messages by channel
+        Index('idx_messages_created_at', 'created_at'),  # Order by timestamp
+        Index('idx_messages_author_id', 'author_id'),  # Filter by author
+        Index('idx_messages_channel_created', 'channel_id', 'created_at'),  # Combined for pagination
+    )
 
 
 class Task(Base):
@@ -154,6 +170,14 @@ class Workflow(Base):
     # Relationships
     workflow_tasks = relationship("WorkflowTask", back_populates="workflow", cascade="all, delete-orphan")
 
+    # Indexes for query optimization (Issue #47)
+    __table_args__ = (
+        Index('idx_workflows_status', 'status'),  # Filter by status
+        Index('idx_workflows_created_at', 'created_at'),  # Order by timestamp
+        Index('idx_workflows_channel_id', 'channel_id'),  # Filter by channel
+        Index('idx_workflows_status_created', 'status', 'created_at'),  # Combined for pagination
+    )
+
 
 class WorkflowTask(Base):
     """Individual task within a workflow"""
@@ -175,6 +199,14 @@ class WorkflowTask(Base):
     # Relationships
     workflow = relationship("Workflow", back_populates="workflow_tasks")
     agent = relationship("Agent")
+
+    # Indexes for query optimization (Issue #47)
+    __table_args__ = (
+        Index('idx_workflow_tasks_workflow_id', 'workflow_id'),  # Fetch tasks by workflow
+        Index('idx_workflow_tasks_status', 'status'),  # Filter by status
+        Index('idx_workflow_tasks_order', 'order_index'),  # Order by execution order
+        Index('idx_workflow_tasks_workflow_status', 'workflow_id', 'status'),  # Combined filter
+    )
 
 
 class UploadedFile(Base):

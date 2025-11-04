@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RezNet AI - Enter the Grid</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#590df2",
+              "background-light": "#f6f5f8",
+              "background-dark": "#161022",
+            },
+            fontFamily: {
+              "display": ["Space Grotesk", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            --neon-cyan: #00FFFF;
+            --neon-magenta: #FF00FF;
+            --dark-background: #0D0221;
+        }
+        .neon-text-cyan {
+            text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+        }
+        .neon-button-glow {
+            box-shadow: 0 0 5px var(--neon-cyan), 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-cyan), inset 0 0 5px var(--neon-cyan);
+            border-color: var(--neon-cyan);
+        }
+        .neon-border {
+            border: 1px solid var(--neon-magenta);
+            box-shadow: 0 0 8px var(--neon-magenta), inset 0 0 8px var(--neon-magenta);
+        }
+        .grid-background {
+            background-color: var(--dark-background);
+            background-image:linear-gradient(to bottom, var(--neon-magenta) 1px, transparent 1px),repeating-linear-gradient(to right, var(--neon-magenta) 0, var(--neon-magenta) 1px, transparent 1px, transparent 40px);
+            background-size: 100% 40px;
+            background-position: center bottom;
+            animation: pulse-grid 10s infinite ease-in-out;
+            perspective: 200px;perspective-origin: 50% 0;}
+        .grid-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:repeating-linear-gradient(90deg, 
+                    var(--neon-magenta) 0, var(--neon-magenta) 1px, 
+                    transparent 1px, transparent 40px
+                ),repeating-linear-gradient(0deg, 
+                    var(--neon-magenta) 0, var(--neon-magenta) 1px, 
+                    transparent 1px, transparent 40px
+                );
+            background-size: 40px 40px;
+            transform-origin: 50% 0;transform: rotateX(80deg);
+            animation: scroll-grid 15s linear infinite;
+        }
+        .starfield-background {
+             background-color: #000000;
+             background-image: radial-gradient(white 0.5px, transparent 0.5px);
+             background-size: 20px 20px;
+        }
+        @keyframes pulse-grid {
+            0% { background-color: #0D0221; }
+            50% { background-color: #1a0442; }
+            100% { background-color: #0D0221; }
+        }
+        @keyframes scroll-grid {
+            from { background-position-y: 0; }
+            to { background-position-y: -40px; }
+        }
+    </style>
+</head>
+<body class="font-display bg-[#000000] text-[#F5F5F5] dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="flex flex-1 justify-center">
+<div class="layout-content-container flex flex-col w-full max-w-5xl">
+<header class="flex items-center justify-between whitespace-nowrap px-6 sm:px-10 py-5 z-20 sticky top-0 bg-[#000000]/80 backdrop-blur-sm border-b border-solid border-[#00FFFF]/30">
+<div class="flex items-center gap-4 text-white">
+<div class="size-6 text-[#00FFFF] neon-text-cyan">
+<svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"></path>
+</svg>
+</div>
+<h2 class="text-white text-xl font-bold leading-tight tracking-[-0.015em] neon-text-cyan">RezNet AI</h2>
+</div>
+<div class="flex flex-1 justify-end items-center gap-6 sm:gap-8">
+<nav class="hidden sm:flex items-center gap-8">
+<a class="text-white text-sm font-medium leading-normal hover:text-[#00FFFF] transition-colors" href="#about">About</a>
+<a class="text-white text-sm font-medium leading-normal hover:text-[#00FFFF] transition-colors" href="#specifications">Specifications</a>
+</nav>
+<a class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#000000] text-white text-sm font-bold leading-normal tracking-[0.015em] border transition-all hover:bg-[#00FFFF] hover:text-black neon-button-glow" href="#">
+<span class="truncate">Clone on GitHub</span>
+</a>
+</div>
+</header>
+<div class="starfield-background z-10">
+<div class="flex min-h-[480px] flex-col gap-6 items-center justify-center p-4 text-center">
+<div class="flex flex-col gap-2">
+<h1 class="text-white text-5xl font-black leading-tight tracking-[-0.033em] sm:text-7xl neon-text-cyan">
+                                RezNet AI
+                            </h1>
+<h2 class="text-[#F5F5F5] text-base font-normal leading-normal sm:text-lg">Enter the Grid. Build the Future.</h2>
+</div>
+</div>
+</div>
+<main class="grid-background relative py-10 sm:py-20 px-6 sm:px-10 overflow-hidden">
+<div class="absolute inset-0 z-0" style="background: linear-gradient(to bottom, var(--dark-background) 0%, transparent 50%, transparent 100%);"></div>
+<div class="relative z-10 flex flex-col gap-16 sm:gap-24">
+<section class="flex flex-col gap-10" id="about">
+<div class="flex flex-col gap-4 text-center items-center">
+<h2 class="text-white tracking-light text-4xl font-bold leading-tight sm:text-5xl max-w-2xl neon-text-cyan">
+                                    Enter the Grid
+                                </h2>
+<p class="text-[#F5F5F5] text-base font-normal leading-normal max-w-2xl">
+                                    Discover the core functionalities that power RezNet AI, designed for seamless integration and powerful performance on the digital frontier.
+                                </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex flex-col gap-4 p-4 rounded-lg bg-black/30 backdrop-blur-sm neon-border">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded" data-alt="Abstract neon grid representing data analytics" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhWcahzBy_wOjY7i422XXaBDkKljKNOcb2uq0laR9Cva7Ry8lo0lj7jV2-6YsaHqTPl8Xp4Duuy42VvXGqPsedI8CIFG-VdlllFLpycWCGfPjb6NIb-5DmD_ftJtnDe9q_b4K8zZC_LSVD1Y4phPflCMelEQXcebe4QgjF1PxxrQtRZZjs0J1uNvg7ERD1H2owex88JWU4vZQ9jofo8_NBNZk-onR7e4YsqMyDS1kC3dD1izQgHQB78FYAZHtye9cDqDzTD5HxV66v");'></div>
+<div>
+<p class="text-white text-lg font-medium leading-normal">Real-time Analytics</p>
+<p class="text-[#F5F5F5]/80 text-sm font-normal leading-normal">Visualize complex data streams with our dynamic, neon-infused interface.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 p-4 rounded-lg bg-black/30 backdrop-blur-sm neon-border">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded" data-alt="Glowing neural network pathways showing AI learning" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1hYVRUlNh6wLlQJaDUS_xtvb61YcPoWtva8em-KmfClUzsdjLJF6IIws8HGTA7wSyqe2Q7femyLCybLHIgC4YhdtxJgEpRikpNKJLElKztZ9CVgRpJ1nAIwxvxM5pxjpjBTeeox5UGcwRDKMYh2TKefPDq3VuhQAmo7vEojt33bBp0idB4QjN1k97tLswdLmkEN7vKBG2uvC9s3O989GccSLiVcWQelwSSz0O7MBCGQOGVNmTLjYfwjUrcQy659auJygCpU6pYdUj");'></div>
+<div>
+<p class="text-white text-lg font-medium leading-normal">Adaptive Learning</p>
+<p class="text-[#F5F5F5]/80 text-sm font-normal leading-normal">Our AI evolves, optimizing its protocols based on user interaction and system feedback.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 p-4 rounded-lg bg-black/30 backdrop-blur-sm neon-border">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded" data-alt="Digital fortress icon symbolizing data security" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCnZiDITfz4nuFQJDWX_Cvt6Y70xDbUC1VFEunCZ1M3HUruXrjsFXH6ovlJ5a1_pDJq1ss0PVVBYKEeSGm3JE7aFXuLLT7RDbgwpBBwcq7oFvLRh7f8faEWP5ZZAQKvIv3c8EDvldNzWyqa4I7kdtfLfWqujq1j-qrJHwJ2y8jm-5tM2cxMnlH7SHY0tecWmOBfjZnUeLpTu8s3SeoEbEw0_hmQrdAiHInFBV0wfweb0jL74EJ8ftLfJ-yzO2qeuxuiAqZlXHo1mJ76");'></div>
+<div>
+<p class="text-white text-lg font-medium leading-normal">Secure Data Channels</p>
+<p class="text-[#F5F5F5]/80 text-sm font-normal leading-normal">End-to-end encryption ensures your information remains secure within the digital frontier.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="flex flex-col justify-end gap-6 py-10 sm:gap-8 sm:py-20 text-center items-center">
+<div class="flex flex-col gap-2">
+<h1 class="text-white tracking-light text-4xl font-bold leading-tight sm:text-5xl max-w-2xl neon-text-cyan">
+                                    Join the Uprising
+                                </h1>
+<p class="text-[#F5F5F5] text-base font-normal leading-normal max-w-2xl">Ready to build the future? The source code is your key.</p>
+</div>
+<div class="flex justify-center">
+<a class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 sm:h-14 sm:px-8 bg-[#000000] text-white text-base font-bold leading-normal tracking-[0.015em] border-2 transition-all hover:bg-[#00FFFF] hover:text-black neon-button-glow" href="#">
+<span class="truncate">Clone the Repo on GitHub</span>
+</a>
+</div>
+</section>
+<section class="flex flex-col gap-6" id="specifications">
+<div class="flex flex-col gap-4 text-center items-center">
+<h2 class="text-white tracking-light text-4xl font-bold leading-tight sm:text-5xl max-w-2xl neon-text-cyan">
+                                    System Protocol
+                                </h2>
+</div>
+<div class="prose prose-invert prose-p:text-[#F5F5F5]/90 prose-headings:text-white prose-strong:text-white prose-code:text-[#FF00FF] prose-a:text-[#00FFFF] max-w-none rounded-lg bg-black/30 backdrop-blur-sm p-6 sm:p-8 neon-border">
+<h3>Core Requirements</h3>
+<ul>
+<li>Node.js v18.0 or higher</li>
+<li>Quantum-entangled CPU (recommended)</li>
+<li>Minimum 1.21 Gigawatts of power</li>
+</ul>
+<h3>Installation</h3>
+<p>Clone the repository and install dependencies to begin your journey into the grid.</p>
+<pre><code>git clone https://github.com/user/reznet-ai.git
+cd reznet-ai
+npm install</code></pre>
+<h3>API Endpoints</h3>
+<p>RezNet AI exposes several RESTful endpoints for interacting with the core system. Authentication is handled via encrypted data packets. Refer to the <code>/docs</code> directory for full specifications.</p>
+<ul>
+<li><code>POST /api/v1/data-stream</code> - Ingest real-time data.</li>
+<li><code>GET /api/v1/analytics</code> - Retrieve processed analytics.</li>
+<li><code>PUT /api/v1/protocol/:id</code> - Update an existing learning protocol.</li>
+</ul>
+</div>
+</section>
+</div>
+</main>
+<footer class="text-center py-6 px-6 sm:px-10 bg-[#000000] border-t border-solid border-[#00FFFF]/30 relative z-10">
+<p class="text-[#F5F5F5]/70 text-sm">Powered By The Grid</p>
+</footer>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

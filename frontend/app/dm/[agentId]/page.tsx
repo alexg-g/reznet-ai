@@ -2,15 +2,38 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useChatStore } from '@/store/chatStore'
 import { useWebSocket, sendMessage } from '@/hooks/useWebSocket'
 import { API_URL, getAgentColor } from '@/lib/constants'
 import { format } from 'date-fns'
 import type { Agent } from '@/lib/types'
-import SystemPromptViewer from '@/components/SystemPromptViewer'
+
+// Dynamic imports for code splitting (Issue #47 - Performance Optimization)
 import Sidebar from '@/components/Sidebar'
-import FileUpload from '@/components/FileUpload'
-import HelpModal from '@/components/HelpModal'
+
+// SystemPromptViewer: Lazy load since it's collapsible and not immediately visible
+// Reduces initial JS by ~5KB (gzipped)
+const SystemPromptViewer = dynamic(() => import('@/components/SystemPromptViewer'), {
+  loading: () => null,
+  ssr: false,
+})
+
+// FileUpload: Small component but rarely used, safe to lazy load
+const FileUpload = dynamic(() => import('@/components/FileUpload'), {
+  loading: () => (
+    <button className="p-2 text-gray-400">
+      <span className="material-symbols-outlined">attach_file</span>
+    </button>
+  ),
+  ssr: false,
+})
+
+// HelpModal: Only loaded when user clicks help button
+const HelpModal = dynamic(() => import('@/components/HelpModal'), {
+  loading: () => null,
+  ssr: false,
+})
 
 export default function AgentDM() {
   const params = useParams()

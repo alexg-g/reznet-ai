@@ -3,14 +3,16 @@ RezNet AI - Main FastAPI Application
 Local MVP Version
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+import time
+import logging
 
-from routers import channels, agents, tasks, workflows, workspace, uploads, agent_templates
+from routers import channels, agents, tasks, workflows, workspace, uploads, websocket_stats, agent_templates
 from websocket import manager as websocket_manager  # Import full module to register event handlers
 from websocket.manager import socket_app
 from core.database import engine, Base
@@ -18,6 +20,10 @@ from core.config import settings
 
 # Load environment variables
 load_dotenv()
+
+# Configure logging for query profiling
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -71,6 +77,18 @@ async def lifespan(app: FastAPI):
     clear_agent_cache()
     print("🔄 Agent cache cleared (agents will use current LLM provider)")
 
+    # Warm Redis cache with frequently accessed data (Issue #47)
+    from core.cache import warm_cache_on_startup
+    from core.database import SessionLocal
+    cache_db = SessionLocal()
+    try:
+        warm_cache_on_startup(cache_db)
+        print("♨️  Redis cache warmed with default agents and channels")
+    except Exception as e:
+        print(f"⚠️  Cache warming failed: {e}")
+    finally:
+        cache_db.close()
+
     yield
 
     # Shutdown
@@ -96,6 +114,64 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Database Query Profiling Middleware
+@app.middleware("http")
+async def database_query_profiling_middleware(request: Request, call_next):
+    """
+    Middleware to profile database queries and API response times.
+
+    Logs:
+    - Total request processing time
+    - Slow queries (> 100ms warning threshold)
+    - Query count per request
+
+    NFR Target: Database query time < 100ms (95th percentile)
+    """
+    from core.database import query_profiling_context
+
+    start_time = time.time()
+
+    # Process request
+    response = await call_next(request)
+
+    # Calculate total time
+    process_time = (time.time() - start_time) * 1000  # Convert to ms
+
+    # Get profiling data from context
+    profiling = query_profiling_context.get()
+    query_count = profiling["query_count"] if profiling else 0
+    query_time = profiling["query_time"] if profiling else 0.0
+    slow_queries = profiling["slow_queries"] if profiling else []
+
+    # Add performance headers
+    response.headers["X-Process-Time"] = f"{process_time:.2f}ms"
+    response.headers["X-Query-Count"] = str(query_count)
+    response.headers["X-Query-Time"] = f"{query_time:.2f}ms"
+
+    # Log performance metrics
+    if process_time > 1000:  # Log slow requests (> 1 second)
+        logger.warning(
+            f"SLOW REQUEST: {request.method} {request.url.path} - "
+            f"Total: {process_time:.2f}ms, Queries: {query_count}, "
+            f"Query Time: {query_time:.2f}ms"
+        )
+    elif process_time > 200:  # Log medium-slow requests (> 200ms)
+        logger.info(
+            f"Medium latency: {request.method} {request.url.path} - "
+            f"{process_time:.2f}ms (queries: {query_count})"
+        )
+
+    # Log slow individual queries
+    if slow_queries:
+        for query_info in slow_queries:
+            logger.warning(
+                f"SLOW QUERY: {query_info['duration']:.2f}ms - {query_info['statement'][:200]}"
+            )
+
+    return response
+
+
 # Mount Socket.IO app for WebSocket support
 app.mount("/socket.io", socket_app)
 
@@ -107,6 +183,7 @@ app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(workflows.router, prefix="/api", tags=["workflows"])
 app.include_router(workspace.router, tags=["workspace"])
 app.include_router(uploads.router, tags=["uploads"])
+app.include_router(websocket_stats.router)  # WebSocket stats (Issue #47)
 
 
 # Health check endpoint
@@ -200,6 +277,154 @@ async def get_llm_config():
         },
         "note": "All agents will use the current_provider unless they have a per-agent override in their config"
     }
+
+
+# Cache Performance Monitoring endpoint (Issue #47)
+@app.get("/api/performance/cache")
+async def get_cache_performance():
+    """
+    Get Redis cache performance metrics (Issue #47)
+
+    Returns:
+    - Cache hit/miss rates
+    - Total operations
+    - Connection status
+
+    NFR Target: 60%+ reduction in repeated database queries
+    """
+    from core.cache import cache
+
+    metrics = cache.get_metrics()
+
+    return {
+        "cache_metrics": metrics,
+        "nfr_target": "60%+ cache hit rate for frequently accessed data",
+        "recommendation": "Monitor hit_rate_percent - should be > 60% for optimal performance"
+    }
+
+
+# WebSocket Performance Monitoring endpoint (Issue #47)
+@app.get("/api/performance/websocket")
+async def get_websocket_performance():
+    """
+    Get WebSocket performance metrics (Issue #47)
+
+    Returns:
+    - Total messages sent
+    - Payload size reduction statistics
+    - Compression usage
+    - Average message size
+
+    NFR Target: 40%+ payload reduction, WebSocket latency < 100ms
+    """
+    from websocket.manager import manager
+
+    stats = manager.get_stats()
+
+    return {
+        "websocket_metrics": stats,
+        "active_connections": len(manager.active_connections),
+        "nfr_target": "40%+ payload reduction, < 100ms latency",
+        "recommendation": "Monitor reduction_percentage - should be > 40% for optimal bandwidth usage"
+    }
+
+
+# Database Performance Monitoring endpoint
+@app.get("/api/performance/database")
+async def get_database_performance():
+    """
+    Get database performance metrics (Issue #47)
+
+    Returns:
+    - Database connection pool stats
+    - Index usage statistics
+    - Table sizes
+    - Query performance insights
+
+    NFR Target: Database query time < 100ms (95th percentile)
+    """
+    from core.database import SessionLocal
+    from sqlalchemy import text
+
+    db = SessionLocal()
+    try:
+        # Connection pool stats
+        pool_stats = {
+            "pool_size": engine.pool.size(),
+            "checked_in": engine.pool.checkedin(),
+            "checked_out": engine.pool.checkedout(),
+            "overflow": engine.pool.overflow(),
+            "total_connections": engine.pool.size() + engine.pool.overflow()
+        }
+
+        # Index usage statistics
+        index_usage_query = text("""
+            SELECT
+                schemaname,
+                tablename,
+                indexname,
+                idx_scan as index_scans,
+                idx_tup_read as tuples_read,
+                idx_tup_fetch as tuples_fetched
+            FROM pg_stat_user_indexes
+            WHERE schemaname = 'public'
+            ORDER BY idx_scan DESC
+            LIMIT 20;
+        """)
+
+        index_usage = db.execute(index_usage_query).fetchall()
+        index_stats = [
+            {
+                "table": row.tablename,
+                "index": row.indexname,
+                "scans": row.index_scans,
+                "tuples_read": row.tuples_read,
+                "tuples_fetched": row.tuples_fetched
+            }
+            for row in index_usage
+        ]
+
+        # Table sizes
+        table_size_query = text("""
+            SELECT
+                tablename,
+                pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
+                pg_total_relation_size(schemaname||'.'||tablename) AS size_bytes
+            FROM pg_tables
+            WHERE schemaname = 'public'
+            ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+        """)
+
+        table_sizes = db.execute(table_size_query).fetchall()
+        table_stats = [
+            {
+                "table": row.tablename,
+                "size": row.size,
+                "size_bytes": row.size_bytes
+            }
+            for row in table_sizes
+        ]
+
+        # Slow query log (if enabled)
+        slow_queries_info = {
+            "note": "Enable slow query logging in PostgreSQL for detailed analysis",
+            "recommended_settings": {
+                "log_min_duration_statement": "100ms",
+                "log_statement": "all"
+            }
+        }
+
+        return {
+            "connection_pool": pool_stats,
+            "index_usage": index_stats,
+            "table_sizes": table_stats,
+            "slow_queries": slow_queries_info,
+            "nfr_target": "< 100ms per query (95th percentile)",
+            "note": "Check response headers (X-Query-Time, X-Query-Count) on API endpoints for real-time profiling"
+        }
+
+    finally:
+        db.close()
 
 
 # Diagnostic endpoint for Ollama (dev only)
