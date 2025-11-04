@@ -302,6 +302,110 @@ When you mention another agent (like @backend), they will be automatically notif
             self.status = "error"
             return f"I encountered an error while processing your request: {str(e)}"
 
+    async def process_message_streaming(
+        self,
+        message: str,
+        context: Optional[Dict[str, Any]] = None,
+        callback=None
+    ):
+        """
+        Process an incoming message with streaming response support.
+        Yields text chunks as they arrive for real-time display.
+
+        Args:
+            message: The user message to process
+            context: Additional context (conversation history, files, etc.)
+            callback: Optional async callback function(chunk, is_final) for each chunk
+
+        Yields:
+            Tuple of (text_chunk, is_final, metadata)
+            - text_chunk: Incremental text chunk
+            - is_final: True if this is the final chunk
+            - metadata: Additional metadata (tool_calls, etc.)
+        """
+        try:
+            # Update status
+            self.status = "thinking"
+
+            # Build the prompt with context
+            prompt = self._build_prompt(message, context)
+
+            # Get tool schemas if tools are enabled
+            tools = None
+            if self.enable_tools and self.llm.has_native_tool_calling():
+                tools = get_tool_schemas(self.llm.provider)
+
+            # Stream response from LLM
+            accumulated_response = ""
+            final_tool_calls = None
+
+            async for text_chunk, is_final, tool_calls in self.llm.stream(
+                prompt=prompt,
+                system=self.get_system_prompt(),
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                tools=tools
+            ):
+                accumulated_response += text_chunk
+
+                # Call callback if provided
+                if callback and text_chunk:
+                    await callback(text_chunk, is_final)
+
+                # Store tool calls from final chunk
+                if is_final and tool_calls:
+                    final_tool_calls = tool_calls
+
+                # Yield the chunk
+                yield (text_chunk, is_final, {"tool_calls": tool_calls if is_final else None})
+
+            # Handle tool calls after streaming completes
+            if self.enable_tools:
+                # For Ollama (no native tool calling), parse XML from accumulated response
+                if not self.llm.has_native_tool_calling():
+                    cleaned_response, parsed_tool_calls = self._parse_xml_tool_calls(accumulated_response)
+                    if parsed_tool_calls:
+                        final_tool_calls = parsed_tool_calls
+                        # If we extracted tool calls, update the accumulated response
+                        accumulated_response = cleaned_response
+
+                # Execute tool calls if any
+                if final_tool_calls:
+                    logger.info(f"Agent {self.name} made {len(final_tool_calls)} tool call(s)")
+                    tool_results = []
+
+                    for tool_call in final_tool_calls:
+                        tool_name = tool_call.get("name")
+                        tool_input = tool_call.get("input", {})
+
+                        result = await self.execute_tool(tool_name, tool_input)
+                        tool_results.append({
+                            "tool": tool_name,
+                            "input": tool_input,
+                            "result": result
+                        })
+
+                    # Format tool results for response
+                    results_text = self._format_tool_results(tool_results)
+
+                    # Yield tool results as additional chunks
+                    if results_text:
+                        tool_results_chunk = f"\n\n{results_text}"
+                        if callback:
+                            await callback(tool_results_chunk, True)
+                        yield (tool_results_chunk, True, {"tool_results": tool_results})
+
+            # Update status
+            self.status = "online"
+
+        except Exception as e:
+            logger.error(f"Error in streaming message processing for {self.name}: {e}")
+            self.status = "error"
+            error_msg = f"I encountered an error while processing your request: {str(e)}"
+            if callback:
+                await callback(error_msg, True)
+            yield (error_msg, True, {"error": str(e)})
+
     def _format_tool_results(self, tool_results: List[Dict[str, Any]]) -> str:
         """
         Format tool execution results for display

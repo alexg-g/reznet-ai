@@ -8,6 +8,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from core.database import get_db
+from core.cache import cache, CacheTTL
 from models.database import Workflow, WorkflowTask, Agent
 from models.schemas import (
     WorkflowCreate,
@@ -28,7 +29,7 @@ async def create_workflow_from_plan_request(
     db: Session = Depends(get_db)
 ):
     """
-    Create a workflow from a user request
+    Create a workflow from a user request (optimized query)
 
     The orchestrator will:
     1. Analyze the request
@@ -37,9 +38,12 @@ async def create_workflow_from_plan_request(
     4. Return the workflow with pending tasks
 
     The workflow can then be started with POST /workflows/{id}/start
+
+    Optimization:
+    - Uses idx_agents_type_active composite index for orchestrator lookup
     """
     try:
-        # Get orchestrator agent
+        # Get orchestrator agent (uses idx_agents_type_active composite index)
         orchestrator = db.query(Agent).filter(
             Agent.agent_type == "orchestrator",
             Agent.is_active == True
@@ -105,14 +109,25 @@ async def list_workflows(
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
-    """Get all workflows with optional filters"""
+    """
+    Get all workflows with optional filters (optimized query)
+
+    Optimization:
+    - Uses idx_workflows_status_created composite index when filtering by status
+    - Uses idx_workflows_channel_id when filtering by channel
+    - Pagination with limit/offset to avoid large result sets
+    - Order by created_at DESC uses index scan
+    """
     query = db.query(Workflow)
 
     if status:
+        # Uses idx_workflows_status or idx_workflows_status_created index
         query = query.filter(Workflow.status == status)
     if channel_id:
+        # Uses idx_workflows_channel_id index
         query = query.filter(Workflow.channel_id == channel_id)
 
+    # Order by created_at DESC (uses idx_workflows_status_created if status filter present)
     workflows = (
         query
         .order_by(Workflow.created_at.desc())
@@ -126,13 +141,27 @@ async def list_workflows(
 
 @router.get("/workflows/{workflow_id}", response_model=WorkflowResponse)
 async def get_workflow(workflow_id: UUID, db: Session = Depends(get_db)):
-    """Get workflow by ID with all tasks"""
+    """
+    Get workflow by ID with all tasks (cached)
+
+    Cache: 1 minute TTL (workflows change frequently during execution)
+    """
+    # Try cache first
+    cached_workflow = cache.get("workflows", str(workflow_id))
+    if cached_workflow is not None:
+        return cached_workflow
+
+    # Cache miss - query database
     workflow = db.query(Workflow).filter(
         Workflow.id == workflow_id
     ).first()
 
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
+
+    # Serialize and cache
+    workflow_data = {c.name: getattr(workflow, c.name) for c in workflow.__table__.columns}
+    cache.set("workflows", str(workflow_id), workflow_data, CacheTTL.WORKFLOW_STATUS)
 
     return workflow
 
@@ -150,6 +179,8 @@ async def start_workflow(
     Tasks are executed in parallel where possible.
 
     Returns immediately - progress updates sent via WebSocket
+
+    Cache invalidation: Workflow status changes, so cache is invalidated
     """
     workflow = db.query(Workflow).filter(
         Workflow.id == workflow_id
@@ -174,6 +205,9 @@ async def start_workflow(
         db
     )
 
+    # Invalidate workflow cache (status changing)
+    cache.delete("workflows", str(workflow_id))
+
     return {
         "message": "Workflow execution started",
         "workflow_id": str(workflow_id),
@@ -186,7 +220,11 @@ async def cancel_workflow(
     workflow_id: UUID,
     db: Session = Depends(get_db)
 ):
-    """Cancel a running workflow"""
+    """
+    Cancel a running workflow
+
+    Cache invalidation: Workflow status changes
+    """
     workflow = db.query(Workflow).filter(
         Workflow.id == workflow_id
     ).first()
@@ -204,12 +242,19 @@ async def cancel_workflow(
     orchestrator_service = WorkflowOrchestrator(manager)
     await orchestrator_service.cancel_workflow(workflow_id, db)
 
+    # Invalidate workflow cache (status changed)
+    cache.delete("workflows", str(workflow_id))
+
     return {"message": "Workflow cancelled successfully"}
 
 
 @router.delete("/workflows/{workflow_id}")
 async def delete_workflow(workflow_id: UUID, db: Session = Depends(get_db)):
-    """Delete a workflow and all its tasks"""
+    """
+    Delete a workflow and all its tasks
+
+    Cache invalidation: Removes workflow from cache
+    """
     workflow = db.query(Workflow).filter(
         Workflow.id == workflow_id
     ).first()
@@ -226,6 +271,9 @@ async def delete_workflow(workflow_id: UUID, db: Session = Depends(get_db)):
     db.delete(workflow)
     db.commit()
 
+    # Invalidate workflow cache
+    cache.delete("workflows", str(workflow_id))
+
     return {"message": "Workflow deleted successfully"}
 
 
@@ -235,14 +283,22 @@ async def get_workflow_tasks(
     status: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """Get all tasks for a workflow"""
+    """
+    Get all tasks for a workflow (optimized query)
+
+    Optimization:
+    - Uses idx_workflow_tasks_workflow_status composite index
+    - Order by order_index uses idx_workflow_tasks_order index
+    """
     query = db.query(WorkflowTask).filter(
         WorkflowTask.workflow_id == workflow_id
     )
 
     if status:
+        # Uses idx_workflow_tasks_workflow_status composite index
         query = query.filter(WorkflowTask.status == status)
 
+    # Uses idx_workflow_tasks_order index for sorting
     tasks = query.order_by(WorkflowTask.order_index).all()
 
     return tasks

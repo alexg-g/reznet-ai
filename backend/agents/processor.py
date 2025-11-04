@@ -339,28 +339,56 @@ async def process_agent_message(
                     mark_agent_available(agent_record.id, db)
                     continue
 
-                # Process message
-                response = await agent.process_message(content, context)
-
-                # Save agent's response to database
+                # Create a placeholder message for streaming updates
                 agent_message = Message(
                     channel_id=channel_id,
                     author_id=agent_record.id,
                     author_type='agent',
                     author_name=agent_record.name,
-                    content=response,
+                    content="",  # Will be accumulated during streaming
                     metadata={
                         'model': agent.llm.model,
                         'provider': agent.llm.provider,
-                        'in_reply_to': str(message_id)
+                        'in_reply_to': str(message_id),
+                        'streaming': True
                     }
                 )
                 db.add(agent_message)
                 db.commit()
                 db.refresh(agent_message)
 
-                # Broadcast agent response
+                # Broadcast initial message (empty) to create placeholder in UI
                 await manager.broadcast('message_new', {
+                    'id': str(agent_message.id),
+                    'channel_id': str(agent_message.channel_id),
+                    'author_type': agent_message.author_type,
+                    'author_name': agent_message.author_name,
+                    'content': agent_message.content,
+                    'created_at': agent_message.created_at.isoformat(),
+                    'metadata': agent_message.msg_metadata
+                })
+
+                # Stream response chunks
+                accumulated_response = ""
+
+                async for text_chunk, is_final, metadata in agent.process_message_streaming(content, context):
+                    accumulated_response += text_chunk
+
+                    # Broadcast streaming chunk via WebSocket
+                    await manager.broadcast('message_stream', {
+                        'message_id': str(agent_message.id),
+                        'chunk': text_chunk,
+                        'is_final': is_final,
+                        'metadata': metadata
+                    })
+
+                # Update database with final complete response
+                agent_message.content = accumulated_response
+                agent_message.msg_metadata['streaming'] = False
+                db.commit()
+
+                # Broadcast final complete message
+                await manager.broadcast('message_update', {
                     'id': str(agent_message.id),
                     'channel_id': str(agent_message.channel_id),
                     'author_type': agent_message.author_type,
