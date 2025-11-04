@@ -85,6 +85,12 @@ build/
 /data/uploads/
 /data/agent-memory/
 
+# Meta-development context (local only - not tracked in public repo)
+/meta-dev/
+
+# Claude Code agents (local only - not tracked in public repo)
+/.claude/
+
 # Database files
 *.db
 *.sqlite

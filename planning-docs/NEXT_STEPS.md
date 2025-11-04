@@ -261,7 +261,7 @@ docker-compose up -d
    - Fixed SQLAlchemy reserved attribute conflict
 
 3. **`backend/requirements.txt`**:
-   - Updated `openai>=1.13.3,<2.0.0` (was 1.12.0, incompatible with CrewAI)
+   - Updated `openai>=1.50.0` for latest features and embeddings API
    - Updated `pytest>=8.0.0,<9.0.0` (version conflict resolution)
    - Updated `pytest-asyncio>=0.23.5` (compatibility fix)
 

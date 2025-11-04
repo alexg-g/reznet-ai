@@ -57,7 +57,7 @@ build: Vite / Turbopack
 framework: FastAPI 0.110+
 language: Python 3.11+
 websocket: python-socketio
-orchestration: CrewAI 0.30+
+orchestration: Custom Agent System with pgvector
 async: asyncio + aiohttp
 validation: Pydantic 2.0
 auth: None (local MVP) / Basic session later
@@ -79,10 +79,10 @@ llm_providers:
   - OpenAI (GPT-4, GPT-3.5)
   - Anthropic (Claude 3)
   - Local models via Ollama
-orchestration: CrewAI
+orchestration: Custom BaseAgent with SemanticMemoryManager
 embedding: OpenAI text-embedding-3-small
 mcp_protocol: Model Context Protocol 1.0
-agents: Custom + CrewAI agents
+agents: Custom agents with semantic memory (pgvector)
 ```
 
 ### Local Development
@@ -196,9 +196,10 @@ METRICS_PORT=9090
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
-│  CrewAI Orchestrator│
+│ Workflow Orchestrator│
 │   - Task Planning   │
 │   - Agent Execution │
+│   - Semantic Memory │
 └──────────┬──────────┘
            │
 ┌──────────▼──────────────┐
@@ -385,9 +386,10 @@ async def websocket_endpoint(websocket: WebSocket):
 ```python
 # agents/base.py
 from abc import ABC, abstractmethod
-from crewai import Agent as CrewAgent, Task
 from typing import Dict, Any, Optional
 import asyncio
+from agents.llm_client import LLMClient
+from agents.memory_manager import SemanticMemoryManager
 
 class BaseAgent(ABC):
     def __init__(self, agent_id: str, config: Dict[str, Any]):
@@ -396,16 +398,20 @@ class BaseAgent(ABC):
         self.persona = config["persona"]
         self.status = "online"
         self.tools = self._load_tools(config.get("tools", []))
-        
-        # Initialize CrewAI agent
-        self.crew_agent = CrewAgent(
-            role=self.persona["role"],
-            goal=self.persona["goal"],
-            backstory=self.persona["backstory"],
-            tools=self.tools,
-            llm_model=config.get("model", "gpt-4"),
-            max_iterations=5
+
+        # Initialize LLM client with multi-provider support
+        self.llm = LLMClient(
+            provider=config.get("provider", "anthropic"),
+            model=config.get("model", "claude-3-5-sonnet-20241022")
         )
+
+        # Initialize semantic memory (optional)
+        if config.get("enable_memory"):
+            self.memory = SemanticMemoryManager(
+                agent_id=self.id,
+                db=db_session,
+                window_size=config.get("memory_window_size", 50)
+            )
     
     @abstractmethod
     async def process_message(self, message: str, context: Dict) -> str:
@@ -917,7 +923,7 @@ docker exec -it reznetai-local_redis_1 redis-cli FLUSHALL
 - ❌ Complex user management
 
 ### What We Kept
-- ✅ Full agent orchestration (CrewAI)
+- ✅ Full agent orchestration (Custom with semantic memory)
 - ✅ MCP tool integration
 - ✅ Slack-like chat interface
 - ✅ WebSocket real-time messaging

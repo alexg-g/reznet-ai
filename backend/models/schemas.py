@@ -300,3 +300,66 @@ class FileUploadResponse(BaseModel):
     file: UploadedFileResponse
     workspace_path: str
     message: str
+
+
+# ============================================
+# Agent Template Schemas
+# ============================================
+
+class AgentTemplateLLMConfig(BaseModel):
+    """LLM configuration for agent templates"""
+    provider: Optional[str] = None  # 'anthropic', 'openai', 'ollama'
+    model: Optional[str] = None
+    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
+    max_tokens: Optional[int] = Field(default=4000, gt=0)
+
+
+class AgentTemplateBase(BaseModel):
+    """Base schema for agent templates"""
+    name: str = Field(..., min_length=1, max_length=100, pattern=r'^[a-z0-9-]+$')
+    display_name: str = Field(..., min_length=1, max_length=100)
+    role: str = Field(..., min_length=1, max_length=200)
+    system_prompt: str = Field(..., min_length=10, max_length=10000)
+    color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    icon: Optional[str] = Field(None, max_length=10)
+    available_tools: List[str] = Field(default_factory=list)
+    llm_config: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    domain: Optional[str] = Field(None, max_length=100)
+
+
+class AgentTemplateCreate(AgentTemplateBase):
+    """Schema for creating a new agent template"""
+    pass
+
+
+class AgentTemplateUpdate(BaseModel):
+    """Schema for updating an agent template"""
+    display_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    role: Optional[str] = Field(None, min_length=1, max_length=200)
+    system_prompt: Optional[str] = Field(None, min_length=10, max_length=10000)
+    color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    icon: Optional[str] = Field(None, max_length=10)
+    available_tools: Optional[List[str]] = None
+    llm_config: Optional[Dict[str, Any]] = None
+    domain: Optional[str] = Field(None, max_length=100)
+
+
+class AgentTemplateResponse(AgentTemplateBase):
+    """Schema for agent template response"""
+    id: UUID
+    template_type: str
+    is_public: bool
+    created_by: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AgentTemplateListResponse(BaseModel):
+    """Schema for listing agent templates with metadata"""
+    templates: List[AgentTemplateResponse]
+    total: int
+    default_templates: int
+    custom_templates: int

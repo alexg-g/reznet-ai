@@ -302,8 +302,8 @@ MIT License
 
 ## 🙏 Acknowledgments
 
-- Built with [CrewAI](https://github.com/joaomdmoura/crewAI)
 - Uses [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
+- Uses [pgvector](https://github.com/pgvector/pgvector) for semantic memory
 - Powered by Anthropic Claude, OpenAI, and Ollama
 
 ---

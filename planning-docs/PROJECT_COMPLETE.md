@@ -278,7 +278,7 @@ reznet-ai/
 - **SQLAlchemy** - ORM
 - **PostgreSQL** 16 + pgvector
 - **Redis** 7.2 - Caching
-- **CrewAI** - Agent orchestration
+- **Custom Agent System** - Agent orchestration with semantic memory (pgvector)
 
 ### Frontend
 - **Next.js** 14 - React framework

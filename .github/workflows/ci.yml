@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    # Run on all PRs, including dependabot
+    branches: ['**']
 
 jobs:
   security-backend:
