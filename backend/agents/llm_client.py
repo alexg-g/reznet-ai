@@ -6,6 +6,17 @@ Supports Anthropic Claude, OpenAI, and Ollama
 from typing import Optional, Dict, Any, List, Tuple
 import logging
 from core.config import settings
+from core.error_handling import (
+    LLMError,
+    LLMAPIError,
+    LLMTimeoutError,
+    LLMQuotaError,
+    LLMAuthenticationError,
+    classify_error,
+    retry_with_exponential_backoff,
+    structured_log_error,
+    ErrorRecoveryStrategy
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +108,7 @@ class LLMClient:
         **kwargs
     ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
         """
-        Generate text using the configured LLM provider
+        Generate text using the configured LLM provider with automatic fallback
 
         Args:
             prompt: The user prompt
@@ -112,13 +123,81 @@ class LLMClient:
             - generated_text: The text response from the LLM
             - tool_calls: List of tool calls if LLM requested any, None otherwise
         """
-        if self.provider == "anthropic":
-            return await self._generate_anthropic(prompt, system, temperature, max_tokens, tools, **kwargs)
-        elif self.provider == "openai":
-            return await self._generate_openai(prompt, system, temperature, max_tokens, tools, **kwargs)
-        elif self.provider == "ollama":
-            return await self._generate_ollama(prompt, system, temperature, max_tokens, tools, **kwargs)
+        try:
+            if self.provider == "anthropic":
+                return await self._generate_anthropic(prompt, system, temperature, max_tokens, tools, **kwargs)
+            elif self.provider == "openai":
+                return await self._generate_openai(prompt, system, temperature, max_tokens, tools, **kwargs)
+            elif self.provider == "ollama":
+                return await self._generate_ollama(prompt, system, temperature, max_tokens, tools, **kwargs)
+        except LLMError as e:
+            # Check if we should try fallback providers
+            if ErrorRecoveryStrategy.should_fallback_to_different_provider(e):
+                logger.warning(f"Primary provider {self.provider} failed, attempting fallback...")
+                return await self._try_fallback_providers(prompt, system, temperature, max_tokens, tools, **kwargs)
+            raise
 
+    async def _try_fallback_providers(
+        self,
+        prompt: str,
+        system: Optional[str],
+        temperature: float,
+        max_tokens: int,
+        tools: Optional[List[Dict[str, Any]]],
+        **kwargs
+    ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
+        """
+        Try alternative providers when primary provider fails
+
+        Args:
+            Same as generate()
+
+        Returns:
+            Response from successful fallback provider
+
+        Raises:
+            LLMError if all fallback providers fail
+        """
+        fallback_providers = ErrorRecoveryStrategy.get_fallback_order(self.provider)
+        original_provider = self.provider
+        original_model = self.model
+
+        for fallback_provider in fallback_providers:
+            try:
+                logger.info(f"Trying fallback provider: {fallback_provider}")
+
+                # Temporarily switch to fallback provider
+                self.provider = fallback_provider
+                self.model = self._get_default_model()
+
+                # Re-initialize client for fallback provider
+                if fallback_provider == "anthropic":
+                    self._init_anthropic()
+                    result = await self._generate_anthropic(prompt, system, temperature, max_tokens, tools, **kwargs)
+                elif fallback_provider == "openai":
+                    self._init_openai()
+                    result = await self._generate_openai(prompt, system, temperature, max_tokens, tools, **kwargs)
+                elif fallback_provider == "ollama":
+                    self._init_ollama()
+                    result = await self._generate_ollama(prompt, system, temperature, max_tokens, tools, **kwargs)
+
+                logger.info(f"Successfully used fallback provider: {fallback_provider}")
+                return result
+
+            except Exception as e:
+                logger.warning(f"Fallback provider {fallback_provider} also failed: {e}")
+                continue
+
+        # All fallback providers failed - restore original and raise
+        self.provider = original_provider
+        self.model = original_model
+        raise LLMAPIError(
+            f"All LLM providers failed. Original: {original_provider}, Tried: {', '.join(fallback_providers)}",
+            provider=original_provider,
+            model=original_model
+        )
+
+    @retry_with_exponential_backoff(max_attempts=3, initial_delay=1.0)
     async def _generate_anthropic(
         self,
         prompt: str,
@@ -128,7 +207,7 @@ class LLMClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
-        """Generate using Anthropic Claude"""
+        """Generate using Anthropic Claude with retry logic"""
         try:
             messages = [{"role": "user", "content": prompt}]
 
@@ -165,9 +244,21 @@ class LLMClient:
             return text_content, tool_calls if tool_calls else None
 
         except Exception as e:
-            logger.error(f"Anthropic API error: {e}")
-            raise
+            # Classify and convert to LLMError
+            llm_error = classify_error(e, "anthropic")
+            llm_error.model = self.model
 
+            # Log with structured context
+            structured_log_error(e, {
+                "provider": "anthropic",
+                "model": self.model,
+                "prompt_length": len(prompt),
+                "has_tools": tools is not None
+            })
+
+            raise llm_error
+
+    @retry_with_exponential_backoff(max_attempts=3, initial_delay=1.0)
     async def _generate_openai(
         self,
         prompt: str,
@@ -177,7 +268,7 @@ class LLMClient:
         tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
-        """Generate using OpenAI"""
+        """Generate using OpenAI with retry logic"""
         try:
             messages = []
             if system:
@@ -217,9 +308,21 @@ class LLMClient:
             return text_content, tool_calls
 
         except Exception as e:
-            logger.error(f"OpenAI API error: {e}")
-            raise
+            # Classify and convert to LLMError
+            llm_error = classify_error(e, "openai")
+            llm_error.model = self.model
 
+            # Log with structured context
+            structured_log_error(e, {
+                "provider": "openai",
+                "model": self.model,
+                "prompt_length": len(prompt),
+                "has_tools": tools is not None
+            })
+
+            raise llm_error
+
+    @retry_with_exponential_backoff(max_attempts=3, initial_delay=1.0)
     async def _generate_ollama(
         self,
         prompt: str,
@@ -230,38 +333,31 @@ class LLMClient:
         **kwargs
     ) -> Tuple[str, Optional[List[Dict[str, Any]]]]:
         """
-        Generate using Ollama (local models)
+        Generate using Ollama (local models) with retry logic
 
         Note: Ollama doesn't support native tool calling.
         Tools are ignored here; tool extraction happens via XML parsing in BaseAgent.
         """
         import json
-        import traceback
 
-        logger.info("="*60)
         logger.info("OLLAMA _generate_ollama called")
-        logger.info(f"Prompt length: {len(prompt)}")
-        logger.info(f"Model: {self.model}")
-        logger.info(f"Settings OLLAMA_HOST: {settings.OLLAMA_HOST}")
+        logger.info(f"Prompt length: {len(prompt)}, Model: {self.model}")
 
         try:
             # Check if client exists and is properly initialized
             if not hasattr(self, 'client'):
-                raise AttributeError("httpx client not initialized!")
+                raise LLMAPIError(
+                    "Ollama client not initialized",
+                    provider="ollama",
+                    model=self.model
+                )
 
-            logger.info(f"Client exists: {hasattr(self, 'client')}")
-            logger.info(f"Client type: {type(self.client)}")
-            logger.info(f"Client base_url: {self.client.base_url}")
-            logger.info(f"Client is_closed: {self.client.is_closed}")
-
-            # DIAGNOSTIC: Test client connectivity first
-            try:
-                logger.info("DIAGNOSTIC: Testing basic connectivity...")
-                test_response = await self.client.get("/api/tags")
-                logger.info(f"DIAGNOSTIC: GET /api/tags returned {test_response.status_code}")
-                logger.info(f"DIAGNOSTIC: Full URL was: {test_response.url}")
-            except Exception as diag_error:
-                logger.error(f"DIAGNOSTIC: Connectivity test failed: {diag_error}")
+            if self.client.is_closed:
+                raise LLMAPIError(
+                    "Ollama client connection is closed",
+                    provider="ollama",
+                    model=self.model
+                )
 
             payload = {
                 "model": self.model,
@@ -276,48 +372,35 @@ class LLMClient:
             if system:
                 payload["system"] = system
 
-            logger.info(f"Payload prepared for model: {payload['model']}")
-            logger.info(f"Payload keys: {list(payload.keys())}")
-
-            # Build request - try multiple approaches
-            logger.info("APPROACH 1: Using build_request + send")
+            # Build and send request
             request = self.client.build_request("POST", "/api/generate", json=payload)
-            logger.info(f"Request URL: {request.url}")
-            logger.info(f"Request method: {request.method}")
-            logger.info(f"Request headers: {dict(request.headers)}")
-
-            # Also try logging the absolute URL
-            logger.info(f"Absolute URL: {str(request.url)}")
-
-            # Send request
-            logger.info("Sending request...")
             response = await self.client.send(request)
-            logger.info(f"Response received - Status: {response.status_code}")
-            logger.info(f"Response headers: {dict(response.headers)}")
-
-            # Log response body even on error
-            try:
-                response_text = response.text
-                logger.info(f"Response body (first 500 chars): {response_text[:500]}")
-            except:
-                pass
 
             response.raise_for_status()
 
             # Parse response
             data = response.json()
             result = data.get("response", "")
-            logger.info(f"Result length: {len(result)}")
-            logger.info("="*60)
+            logger.info(f"Ollama response received, length: {len(result)}")
+
             # Ollama doesn't support native tool calling, return text only
             return result, None
 
         except Exception as e:
-            logger.error("="*60)
-            logger.error(f"OLLAMA ERROR: {type(e).__name__}: {e}")
-            logger.error(f"Traceback:\n{traceback.format_exc()}")
-            logger.error("="*60)
-            raise
+            # Classify and convert to LLMError
+            llm_error = classify_error(e, "ollama")
+            llm_error.model = self.model
+
+            # Log with structured context
+            structured_log_error(e, {
+                "provider": "ollama",
+                "model": self.model,
+                "prompt_length": len(prompt),
+                "has_tools": tools is not None,
+                "ollama_host": settings.OLLAMA_HOST
+            })
+
+            raise llm_error
 
     async def generate_streaming(
         self,
