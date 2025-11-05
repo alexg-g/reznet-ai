@@ -479,8 +479,8 @@ async def process_agent_message(
                 })
 
                 # Check agent response for @mentions (recursive triggering)
-                # Extract mentions from response
-                response_mentions = extract_mentions(response, strip_md=True)
+                # Extract mentions from response (use accumulated_response from streaming)
+                response_mentions = extract_mentions(accumulated_response, strip_md=True)
 
                 if response_mentions and depth < MAX_DEPTH - 1:
                     # Found mentions in agent response - trigger those agents recursively
@@ -500,7 +500,7 @@ async def process_agent_message(
                         asyncio.create_task(
                             process_agent_message(
                                 message_id=agent_message.id,  # Use agent's message as trigger
-                                content=response,
+                                content=accumulated_response,
                                 channel_id=channel_id,
                                 mentioned_agents=new_agents,
                                 manager=manager,

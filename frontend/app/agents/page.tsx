@@ -141,8 +141,8 @@ export default function AgentsPage() {
       const agents = await response.json();
       setAgents(agents);
 
-      // Navigate to DM with new agent
-      router.push(`/dm/${agent.id}`);
+      // Navigate to unified chat interface with DM view
+      router.push(`/?view=dm&id=${agent.id}`);
     } catch (error) {
       console.error('Failed to instantiate template:', error);
       showToast(

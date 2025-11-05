@@ -12,7 +12,7 @@ interface SidebarProps {
   activeChannelId?: string | null
   activeAgentId?: string | null
   onChannelClick: (channelId: string) => void
-  onAgentClick: (agentId: string) => void
+  onAgentClick: (agentId: string) => void | Promise<void>
 }
 
 export default function Sidebar({
@@ -78,19 +78,9 @@ export default function Sidebar({
           ))}
 
           {/* AI Agents Section */}
-          <div className="flex items-center justify-between px-3 pt-6 pb-2">
-            <p className="text-electric-purple text-xs font-bold uppercase tracking-widest">
-              AI Agents
-            </p>
-            <button
-              onClick={() => router.push('/agents')}
-              className="text-electric-purple hover:text-neon-cyan transition-colors duration-200"
-              title="Manage agent templates"
-              aria-label="Manage agent templates"
-            >
-              <span className="material-symbols-outlined text-base">settings</span>
-            </button>
-          </div>
+          <p className="text-electric-purple text-xs font-bold uppercase tracking-widest px-3 pt-6 pb-2">
+            AI Agents
+          </p>
           {agents.map((agent) => {
             const colors = getAgentColor(agent.name)
             const status = agentStatuses[agent.name]
@@ -121,8 +111,21 @@ export default function Sidebar({
           })}
         </div>
 
+        {/* Add Agent Button */}
+        <div className="flex-shrink-0 mt-4">
+          <button
+            onClick={() => router.push('/agents')}
+            className="flex items-center gap-3 px-4 py-3 mx-4 mb-4 rounded-lg border-2 border-neon-cyan/30 bg-neon-cyan/5 hover:bg-neon-cyan/10 hover:border-neon-cyan/50 transition-all duration-200 group w-[calc(100%-2rem)]"
+          >
+            <span className="material-symbols-outlined text-neon-cyan group-hover:scale-110 transition-transform">
+              add_circle
+            </span>
+            <span className="text-neon-cyan font-medium">Add Agent</span>
+          </button>
+        </div>
+
         {/* User Profile */}
-        <div className="flex-shrink-0 mt-auto border-t border-electric-purple/30 pt-4">
+        <div className="flex-shrink-0 border-t border-electric-purple/30 pt-4">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="size-10 rounded-full bg-gradient-to-br from-hot-magenta to-neon-cyan shadow-glow-cyan flex items-center justify-center">
