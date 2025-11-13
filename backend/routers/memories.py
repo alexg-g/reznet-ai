@@ -19,6 +19,7 @@ from agents.specialists import (
     DevOpsAgent,
     OrchestratorAgent
 )
+from agents.custom_agent import CustomAgent
 from agents.memory_manager import SemanticMemoryManager
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,9 @@ def get_agent_with_memory(agent_id: UUID, db: Session) -> Any:
     """
     Get agent instance with memory support
 
+    Supports both built-in specialist agents and custom user-created agents.
+    All agents automatically get full semantic memory support.
+
     Args:
         agent_id: Agent UUID
         db: Database session
@@ -46,18 +50,22 @@ def get_agent_with_memory(agent_id: UUID, db: Session) -> Any:
         Agent instance with memory
 
     Raises:
-        HTTPException: If agent not found or cannot be instantiated
+        HTTPException: If agent not found
     """
     agent_record = db.query(Agent).filter(Agent.id == agent_id).first()
     if not agent_record:
         raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
 
+    # Try to get specialist agent class
     agent_class = AGENT_CLASSES.get(agent_record.agent_type)
+
+    # If not a known specialist, use CustomAgent (for user-created agents)
     if not agent_class:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unknown agent type: {agent_record.agent_type}"
+        logger.info(
+            f"Using CustomAgent for memory operations on agent type '{agent_record.agent_type}' "
+            f"(agent: {agent_record.name})"
         )
+        agent_class = CustomAgent
 
     # Instantiate agent with DB session for memory
     agent = agent_class(

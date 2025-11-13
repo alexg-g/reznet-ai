@@ -16,6 +16,7 @@ from agents.specialists import (
     DevOpsAgent,
     OrchestratorAgent
 )
+from agents.custom_agent import CustomAgent
 from utils.text_parsing import extract_mentions
 from core.error_handling import (
     LLMError,
@@ -130,6 +131,9 @@ def get_agent_instance(agent_record: Agent, db: Session) -> Any:
     """
     Get or create agent instance from database record
 
+    Supports both built-in specialist agents and custom user-created agents.
+    Custom agents automatically inherit BaseAgentWithMemory for full semantic memory support.
+
     Args:
         agent_record: Agent database record
         db: Database session for memory operations
@@ -141,10 +145,16 @@ def get_agent_instance(agent_record: Agent, db: Session) -> Any:
             cached_agent.set_db_session(db)
         return cached_agent
 
+    # Try to get specialist agent class
     agent_class = AGENT_CLASSES.get(agent_record.agent_type)
+
+    # If not a known specialist, use CustomAgent (for user-created agents)
     if not agent_class:
-        logger.error(f"Unknown agent type: {agent_record.agent_type}")
-        return None
+        logger.info(
+            f"Using CustomAgent for agent type '{agent_record.agent_type}' "
+            f"(agent: {agent_record.name})"
+        )
+        agent_class = CustomAgent
 
     # Create agent instance with DB session for memory support
     agent = agent_class(
