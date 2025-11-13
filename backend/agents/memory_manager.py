@@ -54,7 +54,7 @@ class SemanticMemoryManager:
         self.enable_summarization = enable_summarization
 
         # Embedding configuration
-        self.embedding_provider = embedding_provider or settings.DEFAULT_LLM_PROVIDER
+        self.embedding_provider = embedding_provider or settings.DEFAULT_EMBEDDING_PROVIDER
         self.embedding_model = settings.EMBEDDING_MODEL
 
         logger.info(
@@ -393,21 +393,72 @@ List entities (one per line):"""
             text: Text to embed
 
         Returns:
-            Embedding vector (1536 dimensions for text-embedding-3-small)
+            Embedding vector (768 dimensions for nomic-embed-text, 1536 for OpenAI)
         """
-        # Import here to avoid circular dependencies
-        if self.embedding_provider == "openai":
+        # Route to appropriate embedding provider
+        if self.embedding_provider == "ollama":
+            return await self._generate_ollama_embedding(text)
+        elif self.embedding_provider == "openai":
             return await self._generate_openai_embedding(text)
         elif self.embedding_provider == "anthropic":
-            # Anthropic doesn't have embeddings yet, fallback to OpenAI
-            logger.warning("Anthropic doesn't provide embeddings, using OpenAI")
-            return await self._generate_openai_embedding(text)
-        elif self.embedding_provider == "ollama":
-            # For now, use OpenAI. In future, implement Ollama embeddings
-            logger.warning("Ollama embeddings not implemented yet, using OpenAI")
-            return await self._generate_openai_embedding(text)
+            # Anthropic doesn't have embeddings, fallback to Ollama or OpenAI
+            logger.warning("Anthropic doesn't provide embeddings, trying Ollama first")
+            try:
+                return await self._generate_ollama_embedding(text)
+            except Exception as e:
+                logger.warning(f"Ollama fallback failed: {e}, trying OpenAI")
+                return await self._generate_openai_embedding(text)
         else:
             raise ValueError(f"Unknown embedding provider: {self.embedding_provider}")
+
+    async def _generate_ollama_embedding(self, text: str) -> List[float]:
+        """
+        Generate embedding using Ollama local models
+
+        Args:
+            text: Text to embed
+
+        Returns:
+            Embedding vector (768 dimensions for nomic-embed-text)
+        """
+        import httpx
+
+        embedding_model = settings.OLLAMA_EMBEDDING_MODEL
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{settings.OLLAMA_HOST}/api/embeddings",
+                    json={
+                        "model": embedding_model,
+                        "prompt": text
+                    }
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                if "embedding" not in data:
+                    raise ValueError(f"Ollama response missing 'embedding' field: {data}")
+
+                embedding = data["embedding"]
+
+                logger.debug(
+                    f"Generated Ollama embedding with {embedding_model} "
+                    f"({len(embedding)} dimensions)"
+                )
+
+                return embedding
+
+        except httpx.HTTPError as e:
+            logger.error(f"Ollama HTTP error: {e}")
+            raise ValueError(
+                f"Failed to generate Ollama embedding. "
+                f"Is Ollama running at {settings.OLLAMA_HOST}? "
+                f"Have you pulled {embedding_model}? (ollama pull {embedding_model})"
+            ) from e
+        except Exception as e:
+            logger.error(f"Ollama embedding generation failed: {e}")
+            raise
 
     async def _generate_openai_embedding(self, text: str) -> List[float]:
         """Generate embedding using OpenAI API"""

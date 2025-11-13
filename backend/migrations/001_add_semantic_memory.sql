@@ -20,7 +20,7 @@ CREATE TABLE agent_memories (
 
     -- Content
     content TEXT NOT NULL,
-    embedding vector(1536),  -- OpenAI text-embedding-3-small: 1536 dimensions
+    embedding vector(768),  -- nomic-embed-text (Ollama): 768 dimensions, OpenAI small: 1536
 
     -- Memory classification
     memory_type VARCHAR(50) DEFAULT 'conversation' NOT NULL,
@@ -60,7 +60,7 @@ COMMENT ON TABLE agent_memories IS
 'Stores agent long-term memories with semantic embeddings for RAG-based retrieval';
 
 COMMENT ON COLUMN agent_memories.embedding IS
-'1536-dimensional vector embedding for semantic similarity search';
+'768-dimensional vector embedding for semantic similarity search (nomic-embed-text)';
 
 COMMENT ON COLUMN agent_memories.memory_type IS
 'Type: conversation, decision, entity, summary, or tool_use';

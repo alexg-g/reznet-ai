@@ -108,8 +108,9 @@ def run_migration():
             logger.info("")
             logger.info("Next steps:")
             logger.info("  1. Update agents to use BaseAgentWithMemory")
-            logger.info("  2. Ensure OPENAI_API_KEY is set (for embeddings)")
-            logger.info("  3. Test with: python -c 'from agents.memory_manager import SemanticMemoryManager; print(\"OK\")'")
+            logger.info("  2. Pull Ollama embedding model: ollama pull nomic-embed-text")
+            logger.info("  3. Set DEFAULT_EMBEDDING_PROVIDER=ollama in .env (recommended)")
+            logger.info("  4. Test with: python -c 'from agents.memory_manager import SemanticMemoryManager; print(\"OK\")'")
             logger.info("")
 
     except Exception as e:

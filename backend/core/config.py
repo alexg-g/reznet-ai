@@ -27,9 +27,11 @@ class Settings(BaseSettings):
 
     OLLAMA_HOST: str = "http://localhost:11434"
     OLLAMA_DEFAULT_MODEL: str = "llama2"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     USE_OLLAMA: bool = False
 
     DEFAULT_LLM_PROVIDER: str = "anthropic"
+    DEFAULT_EMBEDDING_PROVIDER: str = "ollama"
 
     # MCP Servers
     MCP_FILESYSTEM_ENABLED: bool = True
@@ -69,6 +71,7 @@ class Settings(BaseSettings):
     CACHE_TTL: int = 3600
     USE_EMBEDDINGS_CACHE: bool = True
     EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_DIMENSIONS: int = 768  # nomic-embed-text: 768, OpenAI small: 1536
 
     # Agent Configuration
     MAX_CONCURRENT_AGENTS: int = 5

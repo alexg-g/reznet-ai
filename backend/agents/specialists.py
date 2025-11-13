@@ -3,10 +3,10 @@ Specialist Agent Implementations
 """
 
 from typing import Dict, Any, List
-from agents.base import BaseAgent
+from agents.base_with_memory import BaseAgentWithMemory
 
 
-class BackendAgent(BaseAgent):
+class BackendAgent(BaseAgentWithMemory):
     """Backend development specialist"""
 
     def get_tools(self) -> List[Dict[str, Any]]:
@@ -45,7 +45,7 @@ When asked to create an API endpoint, use:
 """
 
 
-class FrontendAgent(BaseAgent):
+class FrontendAgent(BaseAgentWithMemory):
     """Frontend development specialist"""
 
     def get_tools(self) -> List[Dict[str, Any]]:
@@ -84,7 +84,7 @@ When asked to create a component, use:
 """
 
 
-class QAAgent(BaseAgent):
+class QAAgent(BaseAgentWithMemory):
     """QA and testing specialist"""
 
     def get_tools(self) -> List[Dict[str, Any]]:
@@ -124,7 +124,7 @@ When asked to write tests, use:
 """
 
 
-class DevOpsAgent(BaseAgent):
+class DevOpsAgent(BaseAgentWithMemory):
     """DevOps and infrastructure specialist"""
 
     def get_tools(self) -> List[Dict[str, Any]]:
@@ -163,7 +163,7 @@ When asked to create deployment config, use:
 """
 
 
-class OrchestratorAgent(BaseAgent):
+class OrchestratorAgent(BaseAgentWithMemory):
     """Orchestrator that coordinates other agents"""
 
     def get_tools(self) -> List[Dict[str, Any]]:

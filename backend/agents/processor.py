@@ -126,25 +126,34 @@ def mark_agent_available(agent_id: UUID, db: Session):
         logger.info(f"Agent {agent.name} marked as available (completed task {task_id})")
 
 
-def get_agent_instance(agent_record: Agent) -> Any:
+def get_agent_instance(agent_record: Agent, db: Session) -> Any:
     """
     Get or create agent instance from database record
+
+    Args:
+        agent_record: Agent database record
+        db: Database session for memory operations
     """
     if agent_record.id in _agent_cache:
-        return _agent_cache[agent_record.id]
+        cached_agent = _agent_cache[agent_record.id]
+        # Update DB session if agent has memory support
+        if hasattr(cached_agent, 'set_db_session'):
+            cached_agent.set_db_session(db)
+        return cached_agent
 
     agent_class = AGENT_CLASSES.get(agent_record.agent_type)
     if not agent_class:
         logger.error(f"Unknown agent type: {agent_record.agent_type}")
         return None
 
-    # Create agent instance
+    # Create agent instance with DB session for memory support
     agent = agent_class(
         agent_id=agent_record.id,
         name=agent_record.name,
         agent_type=agent_record.agent_type,
         persona=agent_record.persona,
-        config=agent_record.config
+        config=agent_record.config,
+        db=db  # Pass DB session for semantic memory
     )
 
     _agent_cache[agent_record.id] = agent
@@ -288,7 +297,7 @@ async def process_agent_message(
                         # Simple question/greeting - respond normally without workflow
                         logger.info(f"Orchestrator responding directly (no workflow needed): {content[:100]}")
                         # Process as regular agent
-                        agent = get_agent_instance(agent_record)
+                        agent = get_agent_instance(agent_record, db)
 
                         if agent is None:
                             logger.error(f"Could not load agent {agent_record.name}")
@@ -405,7 +414,7 @@ async def process_agent_message(
 
                 # Regular agent processing for non-orchestrator agents
                 # Get agent instance
-                agent = get_agent_instance(agent_record)
+                agent = get_agent_instance(agent_record, db)
                 if not agent:
                     mark_agent_available(agent_record.id, db)
                     continue
@@ -598,7 +607,7 @@ async def invoke_agent(
             raise ValueError(f"Agent is not active: {agent_name}")
 
         # Get agent instance
-        agent = get_agent_instance(agent_record)
+        agent = get_agent_instance(agent_record, db)
         if not agent:
             raise ValueError(f"Could not instantiate agent: {agent_name}")
 
