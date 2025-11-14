@@ -135,7 +135,7 @@ class AgentMemory(Base):
 
     # Content
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(1536), nullable=True)  # OpenAI text-embedding-3-small: 1536 dims
+    embedding = Column(Vector(768), nullable=True)  # nomic-embed-text (Ollama): 768 dims
 
     # Memory classification
     memory_type = Column(String(50), default="conversation")  # conversation, decision, entity, summary, tool_use

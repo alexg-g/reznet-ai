@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 import time
 import logging
 
-from routers import channels, agents, tasks, workflows, workspace, uploads, websocket_stats, agent_templates
+from routers import channels, agents, tasks, workflows, workspace, uploads, websocket_stats, agent_templates, memories
 from websocket import manager as websocket_manager  # Import full module to register event handlers
 from websocket.manager import socket_app
 from core.database import engine, Base
@@ -183,6 +183,7 @@ app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(workflows.router, prefix="/api", tags=["workflows"])
 app.include_router(workspace.router, tags=["workspace"])
 app.include_router(uploads.router, tags=["uploads"])
+app.include_router(memories.router, tags=["memories"])  # Semantic memory API (Issue #2)
 app.include_router(websocket_stats.router)  # WebSocket stats (Issue #47)
 
 
