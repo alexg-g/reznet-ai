@@ -54,10 +54,16 @@ function getOrCreateAgent(
   agentId: string,
   agentType: string,
   _persona: unknown,
+  config?: Record<string, unknown> | null,
 ): RezNetAgent {
   if (agentCache.has(agentId)) {
     return agentCache.get(agentId)!;
   }
+
+  // Extract per-agent model config (falls back to global defaults)
+  const provider = (config?.provider as string) ?? undefined;
+  const modelId = (config?.model as string) ?? undefined;
+  const model = resolveModel(provider, modelId);
 
   // Determine if this is a known specialist type
   const knownType = agentType as AgentName;
@@ -69,7 +75,7 @@ function getOrCreateAgent(
     agent = createSpecialistAgent({
       agentId,
       agentType: knownType,
-      model: resolveModel(),
+      model,
       onDelegate: async (target, task) => {
         // Recursive delegation via agent cache
         const targetAgent = agentCache.get(`agent-${target}`);
@@ -94,7 +100,7 @@ function getOrCreateAgent(
       name: agentType,
       agentType,
       persona,
-      model: resolveModel(),
+      model,
     });
   }
 
@@ -107,6 +113,14 @@ function getOrCreateAgent(
  */
 export function clearAgentCache(): void {
   agentCache.clear();
+}
+
+/**
+ * Evict a single agent from the cache (e.g., after config change).
+ * The next invocation will re-create the agent with the updated config.
+ */
+export function evictAgent(agentId: string): void {
+  agentCache.delete(agentId);
 }
 
 // ---------------------------------------------------------------------------
@@ -329,6 +343,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
       agentRecord.id,
       agentRecord.name,
       agentRecord.persona,
+      agentRecord.config as Record<string, unknown> | null,
     );
 
     // 6. Create placeholder message for streaming
@@ -539,6 +554,7 @@ export async function invokeAgent(
     agentRecord.id,
     agentRecord.name,
     agentRecord.persona,
+    agentRecord.config as Record<string, unknown> | null,
   );
 
   const response = await agent.processMessage(opts.message);

@@ -14,6 +14,8 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { redis } from "../db/connection.js";
 import { agents, channels, type Agent } from "../db/schema.js";
+import { resolveModel } from "../llm/client.js";
+import { evictAgent } from "../agents/processor.js";
 
 // ---------------------------------------------------------------------------
 // Cache TTL constants
@@ -245,6 +247,55 @@ export async function agentRoutes(fastify: FastifyInstance): Promise<void> {
       .where(eq(agents.id, agentId))
       .returning();
 
+    await invalidateAgentCache(agentId, existing.name);
+
+    return reply.send(updated);
+  });
+
+  // -------------------------------------------------------------------------
+  // PATCH /agents/:agentId/config
+  // Update per-agent LLM configuration (provider and/or model).
+  // Merges with existing config, evicts agent cache so next invocation
+  // picks up the new model.
+  // -------------------------------------------------------------------------
+
+  fastify.patch<{
+    Params: { agentId: string };
+    Body: { provider?: string; model?: string };
+  }>("/agents/:agentId/config", async (request, reply) => {
+    const { agentId } = request.params;
+    const { provider, model } = request.body;
+
+    // Validate provider/model combination if either is provided
+    if (provider || model) {
+      try {
+        resolveModel(provider, model);
+      } catch {
+        return reply.status(400).send({ error: "Invalid provider/model combination" });
+      }
+    }
+
+    const [existing] = await db.select().from(agents).where(eq(agents.id, agentId));
+    if (!existing) {
+      return reply.status(404).send({ error: "Agent not found" });
+    }
+
+    // Merge with existing config
+    const currentConfig = (existing.config ?? {}) as Record<string, unknown>;
+    const newConfig = { ...currentConfig };
+    if (provider !== undefined) newConfig.provider = provider;
+    if (model !== undefined) newConfig.model = model;
+
+    const [updated] = await db
+      .update(agents)
+      .set({ config: newConfig, updatedAt: new Date() })
+      .where(eq(agents.id, agentId))
+      .returning();
+
+    // Evict from in-memory agent cache so next invocation uses new model
+    evictAgent(agentId);
+
+    // Invalidate Redis cache
     await invalidateAgentCache(agentId, existing.name);
 
     return reply.send(updated);
