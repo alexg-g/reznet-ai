@@ -137,14 +137,17 @@ export function resolveModel(
   const resolvedProvider = provider ?? settings.DEFAULT_LLM_PROVIDER;
   const resolvedModel = modelId ?? getDefaultModel(resolvedProvider);
 
-  // Ollama: pi-ai has no native provider, so we build a Model object that
-  // routes through Ollama's OpenAI-compatible /v1 endpoint.
+  // Ollama: pi-ai supports any OpenAI-compatible API via the openai-completions
+  // API type. We construct a custom Model object per the pi-ai docs.
+  // Note: provider must be "openai" so pi-ai resolves OPENAI_API_KEY from env
+  // (Ollama ignores the key). pi-agent-core's Agent class doesn't expose the
+  // apiKey stream option, so we can't use provider: "ollama" directly.
   if (resolvedProvider === "ollama") {
     return {
       id: resolvedModel,
       name: resolvedModel,
-      api: "openai-responses",
-      provider: "openai",          // pi-ai uses this for API key lookup
+      api: "openai-completions",
+      provider: "openai",
       baseUrl: `${settings.OLLAMA_HOST}/v1`,
       reasoning: false,
       input: ["text"],
