@@ -2,7 +2,8 @@
 
 ![CI](https://github.com/alexg-g/reznet-ai/workflows/CI/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11+-green.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)
+![Node.js](https://img.shields.io/badge/node-18+-green.svg)
 ![Status](https://img.shields.io/badge/status-MVP-yellow.svg)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
@@ -12,39 +13,39 @@ RezNet AI is a Slack-like chat platform where you orchestrate teams of specializ
 
 **Status**: Local MVP - Single User Development Environment
 
-🌐 **Website**: [reznet-ai-website.pages.dev](https://reznet-ai-website.pages.dev) (coming soon)
-
 ---
 
-## 🌟 Features
+## Features
 
-- **Multi-Agent System**: Coordinate specialized AI agents for different development tasks
+- **Multi-Agent System**: Coordinate specialized AI agents for different tasks
+- **20+ LLM Providers**: Anthropic, OpenAI, Google, Ollama, Groq, OpenRouter, Bedrock, and more via [pi-ai](https://github.com/badlogic/pi-mono)
 - **Real-time Chat Interface**: Slack-like UI with WebSocket communication
+- **Multi-Agent Workflows**: DAG-based task orchestration with parallel execution
 - **MCP Integration**: Model Context Protocol for filesystem and GitHub operations
-- **Multi-LLM Support**: Works with Anthropic Claude, OpenAI, or local Ollama models
-- **Agent Memory**: RAG-based context awareness across conversations
+- **Agent Memory**: Semantic memory with pgvector for context awareness across conversations
 - **Task Tracking**: Built-in task management and delegation
+- **Full-Stack TypeScript**: Unified TypeScript stack (Next.js frontend + Fastify backend)
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────┐
-│   Next.js Client    │  ← Chat UI
+│   Next.js Client    │  <-- Chat UI
 │   localhost:3000    │
 └──────────┬──────────┘
            │ WebSocket + REST
 ┌──────────▼──────────┐
-│   FastAPI Server    │  ← Message Router
-│   localhost:8000    │     Agent Manager
+│   Fastify Server    │  <-- Message Router
+│   localhost:8000    │      Agent Manager (pi-ai + pi-agent-core)
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
-│ AI Agent Team       │
-│ • @orchestrator     │  ← Coordinates tasks
-│ • @backend          │  ← Python/API expert
-│ • @frontend         │  ← React/UI expert
-│ • @qa               │  ← Testing specialist
-│ • @devops           │  ← Infrastructure expert
+│  Pi Agent Instances │
+│  • @orchestrator    │  <-- Coordinates tasks
+│  • @backend         │  <-- Backend expert
+│  • @frontend        │  <-- React/UI expert
+│  • @qa              │  <-- Testing specialist
+│  • @devops          │  <-- Infrastructure expert
 └──────────┬──────────┘
            │
 ┌──────────▼──────────────┐
@@ -54,14 +55,13 @@ RezNet AI is a Slack-like chat platform where you orchestrate teams of specializ
 └─────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - **Docker Desktop** (for PostgreSQL + Redis)
-- **Python 3.11+**
 - **Node.js 18+**
-- **Anthropic API Key** (or OpenAI/Ollama)
+- **Anthropic API Key** (or OpenAI/Google/Ollama/Groq)
 
 ### Installation
 
@@ -80,7 +80,7 @@ This will:
 - Check prerequisites
 - Configure environment variables
 - Start Docker services (PostgreSQL + Redis)
-- Install Python dependencies
+- Install backend dependencies (npm)
 - Install MCP server dependencies
 - Optionally set up the frontend
 
@@ -104,18 +104,18 @@ MCP_GITHUB_TOKEN=your-github-token
 5. **Access the application**
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
-- Frontend: http://localhost:3000 (after setup)
+- Frontend: http://localhost:3000
 
-## 🤖 Available Agents
+## Available Agents
 
 ### @orchestrator
 **Role**: Team Lead & Project Orchestrator
 
-Coordinates development tasks, breaks down complex requirements, and delegates to specialist agents.
+Coordinates development tasks, breaks down complex requirements, and delegates to specialist agents. Plans multi-agent workflows with DAG dependency resolution.
 
 ### @backend
 **Role**: Senior Backend Engineer
-Specializes in Python, FastAPI, databases, and server-side logic.
+Specializes in APIs, databases, and server-side logic.
 
 ### @frontend
 **Role**: Senior Frontend Developer
@@ -129,14 +129,14 @@ Writes comprehensive tests, finds edge cases, ensures code quality.
 **Role**: DevOps Engineer
 Manages infrastructure, Docker, CI/CD, deployment, and monitoring.
 
-## 💬 Usage Examples
+## Usage Examples
 
 ### Via Chat Interface
 Open http://localhost:3000 and interact with agents:
 
 ```
 # Direct agent mention
-@backend How do I implement JWT authentication in FastAPI?
+@backend How do I implement JWT authentication?
 
 # Orchestrated workflow
 @orchestrator Build a user registration feature with email verification
@@ -155,7 +155,7 @@ curl -X POST http://localhost:8000/api/agents/invoke \
   -H "Content-Type: application/json" \
   -d '{
     "agent_name": "@backend",
-    "message": "Explain how to implement JWT authentication in FastAPI",
+    "message": "Explain how to implement JWT authentication",
     "context": {}
   }'
 
@@ -167,37 +167,52 @@ curl -X POST http://localhost:8000/api/channels/{channel_id}/clear \
 ### Via WebSocket
 Connect to `ws://localhost:8000/ws` and send messages that mention agents like `@backend`, `@frontend`, etc.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 reznet-ai/
-├── backend/               # FastAPI backend
-│   ├── agents/           # AI agent implementations
-│   ├── core/             # Core utilities
-│   ├── models/           # Data models
-│   ├── routers/          # API routes
-│   ├── websocket/        # WebSocket handling
-│   └── main.py           # FastAPI app
+├── backend-ts/            # TypeScript backend (Fastify)
+│   ├── src/
+│   │   ├── agents/       # Pi Agent instances + specialists
+│   │   ├── db/           # Drizzle ORM schema + connection
+│   │   ├── llm/          # pi-ai wrapper + error handling
+│   │   ├── memory/       # Semantic memory (pgvector)
+│   │   ├── routes/       # Fastify REST routes
+│   │   ├── websocket/    # Socket.IO handlers
+│   │   ├── workflows/    # DAG workflow engine
+│   │   ├── config.ts     # Zod-validated config
+│   │   └── index.ts      # Fastify entry point
+│   ├── package.json
+│   └── vitest.config.ts
 │
-├── mcp-servers/          # MCP servers
+├── frontend/              # Next.js frontend
+│   ├── app/              # App Router pages
+│   ├── components/       # React components
+│   └── lib/              # Zustand store, utilities
+│
+├── mcp-servers/           # MCP servers
 │   ├── filesystem/       # File system operations
-│   └── github/          # GitHub integration
+│   └── github/           # GitHub integration
 │
-├── frontend/             # Next.js frontend (to be set up)
-├── data/                 # Local data storage
-├── scripts/             # Automation scripts
-└── docker-compose.yml   # Docker services
+├── data/                  # Local data storage
+├── scripts/              # Automation scripts
+└── docker-compose.yml    # Docker services (PostgreSQL + Redis)
 ```
 
-## 🔧 Development
+## Development
 
 ### Running Services Individually
 
 **Backend**:
 ```bash
-cd backend
-source venv/bin/activate
-uvicorn main:app --reload
+cd backend-ts
+npm run dev
+```
+
+**Frontend**:
+```bash
+cd frontend
+npm run dev
 ```
 
 **MCP Servers**:
@@ -216,6 +231,13 @@ docker exec -it reznet-postgres psql -U postgres -d reznetai_local
 docker exec -it reznet-redis redis-cli
 ```
 
+### Running Tests
+
+```bash
+cd backend-ts
+npm test
+```
+
 ### Stop All Services
 
 ```bash
@@ -228,7 +250,7 @@ docker exec -it reznet-redis redis-cli
 ./scripts/reset.sh
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Port Already in Use
 ```bash
@@ -247,38 +269,37 @@ docker-compose logs postgres
 2. Check backend logs: `tail -f logs/backend.log`
 3. Verify LLM provider is accessible
 
-## 📊 API Documentation
+## API Documentation
 
 Interactive API docs available at:
 - **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
 
-## 🛣️ Roadmap
+## Roadmap
 
 ### Current (v1.0 - Local MVP)
-- ✅ Multi-agent system
-- ✅ Real-time WebSocket communication
-- ✅ Multi-LLM support (Anthropic, OpenAI, Ollama)
-- ✅ MCP integration (Filesystem, GitHub)
-- ✅ Task management
-- ⏳ Frontend UI (in progress)
+- Multi-agent system with 5 specialist agents
+- Real-time WebSocket communication
+- Multi-LLM support (20+ providers via pi-ai)
+- MCP integration (Filesystem, GitHub)
+- Multi-agent workflow orchestration (DAG)
+- Semantic memory with pgvector
+- Task management
 
 ### Next Steps
-- Complete frontend implementation
-- Agent memory and context persistence
-- Code execution capabilities
-- Voice input/output
-- Advanced task visualization
+- Custom agent creation UI
+- Workflow visualization
+- Code execution sandbox
+- Agent template library
 
 ### Future
 - Multi-user support
 - Cloud deployment
+- Agent marketplace
 - Usage analytics
-- Plugin system for custom agents
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions! Whether it's bug reports, feature requests, or code contributions, we'd love your help making RezNet AI better.
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ### How to Contribute
 
@@ -288,24 +309,23 @@ We welcome contributions! Whether it's bug reports, feature requests, or code co
 4. **Push to the branch** (`git push origin feature/amazing-feature`)
 5. **Open a Pull Request**
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-## 📣 Community
+## Community
 
 - **Issues**: [GitHub Issues](https://github.com/alexg-g/reznet-ai/issues) - Bug reports & feature requests
 - **Discussions**: [GitHub Discussions](https://github.com/alexg-g/reznet-ai/discussions) - Questions & ideas
 - **Changelog**: Check [GitHub Releases](https://github.com/alexg-g/reznet-ai/releases)
 
-## 📄 License
+## License
 
 MIT License
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- Uses [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
+- Uses [Pi](https://github.com/badlogic/pi-mono) (pi-ai, pi-agent-core) for LLM abstraction and agent runtime
+- Uses [Model Context Protocol (MCP)](https://modelcontextprotocol.io) for tool access
 - Uses [pgvector](https://github.com/pgvector/pgvector) for semantic memory
-- Powered by Anthropic Claude, OpenAI, and Ollama
+- Powered by Anthropic Claude, OpenAI, Google Gemini, Ollama, Groq, and more
 
 ---
 
-**Built for developers, by developers** 🚀
+**Built for developers, by developers**

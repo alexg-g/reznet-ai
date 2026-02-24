@@ -6,11 +6,11 @@
 
 version: 2
 updates:
-  # Backend Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/backend"
+  # Backend TypeScript dependencies (Fastify + Pi)
+  - package-ecosystem: "npm"
+    directory: "/backend-ts"
     schedule:
-      interval: "daily"  # Check daily for security patches
+      interval: "daily"
       day: "monday"
     open-pull-requests-limit: 10
     # Ignore major version bumps (breaking changes need manual review)
@@ -21,14 +21,19 @@ updates:
       - "alexg-g"
     labels:
       - "dependabot"
-    # Group non-security updates to reduce PR noise
     groups:
+      pi-packages:
+        patterns:
+          - "@mariozechner/*"
+        update-types:
+          - "minor"
+          - "patch"
       development-dependencies:
         patterns:
-          - "pytest*"
-          - "black"
-          - "ruff"
-          - "mypy*"
+          - "vitest*"
+          - "typescript"
+          - "eslint*"
+          - "@types/*"
         update-types:
           - "minor"
           - "patch"
@@ -37,7 +42,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "daily"  # Check daily for security
+      interval: "daily"
       day: "monday"
     open-pull-requests-limit: 10
     # Ignore major version bumps (breaking changes need manual review)
@@ -106,7 +111,7 @@ updates:
     labels:
       - "dependabot"
 
-  # GitHub Actions workflows (if any)
+  # GitHub Actions workflows
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

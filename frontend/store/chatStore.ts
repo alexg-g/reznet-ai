@@ -20,6 +20,8 @@ interface ChatState {
   addMessage: (message: Message) => void
   setMessages: (channelId: string, messages: Message[]) => void
   clearMessages: (channelId: string) => void
+  updateMessage: (message: Message) => void
+  appendToMessage: (channelId: string, messageId: string, chunk: string) => void
   setAgents: (agents: Agent[]) => void
   updateAgentStatus: (status: AgentStatus) => void
 
@@ -66,6 +68,32 @@ export const useChatStore = create<ChatState>((set) => ({
       [channelId]: []
     }
   })),
+
+  updateMessage: (message) => set((state) => {
+    const channelMessages = state.messages[message.channel_id]
+    if (!channelMessages) return state
+    return {
+      messages: {
+        ...state.messages,
+        [message.channel_id]: channelMessages.map((m) =>
+          m.id === message.id ? message : m
+        )
+      }
+    }
+  }),
+
+  appendToMessage: (channelId, messageId, chunk) => set((state) => {
+    const channelMessages = state.messages[channelId]
+    if (!channelMessages) return state
+    return {
+      messages: {
+        ...state.messages,
+        [channelId]: channelMessages.map((m) =>
+          m.id === messageId ? { ...m, content: m.content + chunk } : m
+        )
+      }
+    }
+  }),
 
   setAgents: (agents) => set({ agents }),
 

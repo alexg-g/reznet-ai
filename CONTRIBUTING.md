@@ -17,7 +17,6 @@ There are many ways to contribute to RezNet AI:
 ### Prerequisites
 
 Before contributing code, make sure you have:
-- Python 3.11+ installed
 - Node.js 18+ installed
 - Docker Desktop (for PostgreSQL + Redis)
 - Git configured with your GitHub account
@@ -78,41 +77,40 @@ Before contributing code, make sure you have:
 
 6. **Merge** - Once approved, your PR will be merged!
 
-## 🎨 Code Style Guidelines
+## Code Style Guidelines
 
-### Python (Backend)
+### TypeScript (Backend - Fastify)
 
-- **PEP 8** - Follow Python style guide
-- **Type hints** - Use type annotations for all functions
-- **Docstrings** - Document classes and functions
-- **Async** - Use async/await for I/O operations
-- **Imports** - Organize: stdlib, third-party, local
+- **TypeScript strict mode** - Enable strict type checking
+- **Zod** - Use Zod schemas for runtime validation (config, API inputs)
+- **Async/await** - Use async/await for all I/O operations
+- **Drizzle ORM** - Use Drizzle for database queries (no raw SQL unless necessary)
+- **Consistent naming** - camelCase for variables/functions, PascalCase for types/interfaces
 
 Example:
-```python
-async def create_agent(
-    name: str,
-    role: str,
-    system_prompt: str
-) -> Agent:
-    """Create a new AI agent.
+```typescript
+import { z } from 'zod';
 
-    Args:
-        name: Agent identifier (e.g., "backend")
-        role: Agent's role description
-        system_prompt: System prompt template
+const createAgentSchema = z.object({
+  name: z.string().min(1).max(100),
+  role: z.string(),
+  systemPrompt: z.string().max(10000),
+});
 
-    Returns:
-        The created Agent instance
-    """
-    # Implementation
+async function createAgent(
+  input: z.infer<typeof createAgentSchema>
+): Promise<Agent> {
+  const validated = createAgentSchema.parse(input);
+  // Implementation using Drizzle ORM
+}
 ```
 
-**Run linters**:
+**Run linters and tests**:
 ```bash
-cd backend
-ruff check .
-mypy .
+cd backend-ts
+npm run lint
+npm run type-check
+npm test
 ```
 
 ### TypeScript/React (Frontend)
@@ -192,9 +190,8 @@ What should happen instead?
 
 **Environment:**
  - OS: [e.g. macOS 14.0]
- - Python version: [e.g. 3.11.5]
- - LLM Provider: [e.g. Anthropic, OpenAI, Ollama]
  - Node version: [e.g. 18.17.0]
+ - LLM Provider: [e.g. Anthropic, OpenAI, Google, Ollama, Groq]
 
 **Logs/Screenshots**
 Add any error messages or screenshots.
@@ -226,8 +223,8 @@ Any mockups, examples, or references?
 
 ```bash
 # Backend tests
-cd backend
-pytest tests/
+cd backend-ts
+npm test
 
 # Frontend tests
 cd frontend

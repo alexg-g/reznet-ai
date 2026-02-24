@@ -1,7 +1,7 @@
 # Product Requirements Document - RezNet AI
 
-> **Version**: 1.0
-> **Last Updated**: 2025-10-29
+> **Version**: 1.1
+> **Last Updated**: 2026-02-23
 > **Status**: Living Document
 > **Owner**: RezNet AI Development Team
 
@@ -498,19 +498,24 @@ This includes:
 ### Technology Stack (Locked)
 
 **Core Technologies** - These foundational choices should not change without major discussion:
-- **Backend**: Python 3.11+, FastAPI, SQLAlchemy 2.0+, Custom Agent System with pgvector
+- **Backend**: TypeScript 5.3+, Fastify, Drizzle ORM, Zod, pi-ai + pi-agent-core
 - **Frontend**: Next.js 14+, TypeScript 5.3+, Tailwind CSS
-- **Database**: PostgreSQL 16+, Redis 7.2+
-- **AI/LLM**: Multi-provider support (Anthropic, OpenAI, Ollama), Model Context Protocol (MCP)
+- **Database**: PostgreSQL 16+ (pgvector), Redis 7.2+ (ioredis)
+- **AI/LLM**: pi-ai (20+ providers: Anthropic, OpenAI, Google, Ollama, Groq, OpenRouter, Bedrock, etc.)
+- **Agent Runtime**: pi-agent-core (tool calling loop, context compaction, streaming)
+- **Testing**: Vitest (backend), Jest (frontend)
+- **Protocol**: Model Context Protocol (MCP) for tool access
 
 See [CLAUDE.md - Technology Stack](../CLAUDE.md#technology-stack) for detailed rationale.
 
 ### Architecture Principles
 
 **Core Principles**:
+- **Full-Stack TypeScript**: Unified language across frontend and backend for shared types, validation, and developer experience
 - **Modularity**: Plugin architecture for agents and tools (MCP servers)
 - **Extensibility**: JSON-based agent configuration, JSONB metadata columns
-- **Model Flexibility**: Abstract LLM interface, per-agent model configuration
+- **Model Flexibility**: pi-ai provides unified `getModel(provider, modelId)` API with per-agent model configuration
+- **Thin Wrappers**: Our code wraps pi-ai and pi-agent-core with project-specific logic (retry, fallback, memory). If Pi is abandoned, we swap to direct SDK calls without changing agent/workflow code.
 
 See [CLAUDE.md - Key Design Decisions](../CLAUDE.md#key-design-decisions) for implementation details.
 
@@ -587,7 +592,7 @@ Step 3: Check NFR.md (if needed)
 
 Step 4: Check CLAUDE.md (if needed)
   → Architecture: Plugin architecture for agents
-  → Tech stack: FastAPI, Next.js, PostgreSQL
+  → Tech stack: Fastify/TypeScript, Next.js, PostgreSQL, pi-ai, pi-agent-core
 
 Step 5: Create workflow with tasks
   Task 1: Sam-DB - POST /api/agents endpoint
@@ -610,6 +615,7 @@ Step 6: Execute workflow (delegate to specialists)
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.1 | 2026-02-23 | Updated Technical Constraints for TypeScript backend rewrite (Fastify, pi-ai, pi-agent-core, Drizzle ORM). Updated architecture principles. | RezNet AI Team |
 | 1.0 | 2025-10-29 | Initial PRD created. Corrected product vision to emphasize domain-agnostic platform with custom agent creation. Documented Phase 1 (proof-of-concept), Phase 2 (custom agents + production hardening), Phase 3 (cloud), Phase 4 (marketplace). | RezNet AI Team |
 
 ---
