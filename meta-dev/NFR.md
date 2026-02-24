@@ -1,7 +1,7 @@
 # Non-Functional Requirements - RezNet AI
 
 > **Purpose**: Technical specifications for performance, reliability, scalability, and quality
-> **Last Updated**: 2025-10-29
+> **Last Updated**: 2026-02-23
 > **Owned By**: Sam-DB, Tron-QA, Flynn-Dev agents
 
 ---
@@ -182,6 +182,8 @@ This includes:
 
 ### Unit Testing
 
+**Framework**: Vitest (backend), Jest (frontend)
+
 **Coverage Targets**:
 - Backend: > 80% code coverage
 - Frontend: > 70% code coverage
@@ -275,8 +277,8 @@ This includes:
 
 **Performance**:
 - Code generation: < 10s for typical endpoints
-- Code quality: Passes linting and type checking
-- Test generation: Includes unit and integration tests
+- Code quality: Passes TypeScript strict mode and linting
+- Test generation: Includes Vitest unit and integration tests
 
 ### Kevin-UI Agent (Frontend)
 

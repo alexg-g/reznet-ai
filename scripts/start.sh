@@ -67,12 +67,11 @@ else
     echo -e "      ${YELLOW}⚠${NC}  Skipped (no GitHub token configured)"
 fi
 
-# Start Backend
+# Start TypeScript Backend
 echo ""
-echo -e "${BLUE}[4/4]${NC} Starting FastAPI backend..."
-cd backend
-source venv/bin/activate
-uvicorn main:app --reload --port 8000 > ../logs/backend.log 2>&1 &
+echo -e "${BLUE}[4/4]${NC} Starting Fastify backend (TypeScript)..."
+cd backend-ts
+npm run dev > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
 cd ..
 
@@ -126,7 +125,7 @@ echo ""
 echo "📱 Access your application:"
 echo -e "   Frontend:  ${BLUE}http://localhost:3000${NC}"
 echo -e "   Backend:   ${BLUE}http://localhost:8000${NC}"
-echo -e "   API Docs:  ${BLUE}http://localhost:8000/docs${NC}"
+echo -e "   Health:    ${BLUE}http://localhost:8000/health${NC}"
 echo ""
 echo "🔧 Services:"
 echo "   PostgreSQL: localhost:5432"
