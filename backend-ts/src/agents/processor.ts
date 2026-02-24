@@ -272,7 +272,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
   const agentRows = await db
     .select()
     .from(agents)
-    .where(eq(agents.name, `@${agentName}`))
+    .where(eq(agents.name, agentName))
     .limit(1);
 
   const agentRecord = agentRows[0];
@@ -327,7 +327,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
     // 5. Get or create agent instance
     const agent = getOrCreateAgent(
       agentRecord.id,
-      agentRecord.agentType,
+      agentRecord.name,
       agentRecord.persona,
     );
 
@@ -339,7 +339,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
         channelId,
         authorId: agentRecord.id,
         authorType: "agent",
-        authorName: agentRecord.name,
+        authorName: `@${agentRecord.name}`,
         content: "",
         msgMetadata: {
           in_reply_to: messageId,
@@ -408,7 +408,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
       id: placeholder.id,
       channel_id: channelId,
       author_type: "agent",
-      author_name: agentRecord.name,
+      author_name: `@${agentRecord.name}`,
       author_id: agentRecord.id,
       content: accumulatedResponse,
       created_at: placeholder.createdAt?.toISOString(),
@@ -463,7 +463,7 @@ async function processOneAgent(opts: ProcessOneAgentOptions): Promise<void> {
         channelId,
         authorId: agentRecord.id,
         authorType: "agent",
-        authorName: agentRecord.name,
+        authorName: `@${agentRecord.name}`,
         content: errorContent,
         msgMetadata: {
           error: true,
@@ -527,7 +527,7 @@ export async function invokeAgent(
   const agentRows = await db
     .select()
     .from(agents)
-    .where(eq(agents.name, `@${name}`))
+    .where(eq(agents.name, name))
     .limit(1);
 
   const agentRecord = agentRows[0];
@@ -537,7 +537,7 @@ export async function invokeAgent(
 
   const agent = getOrCreateAgent(
     agentRecord.id,
-    agentRecord.agentType,
+    agentRecord.name,
     agentRecord.persona,
   );
 

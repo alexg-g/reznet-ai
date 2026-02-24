@@ -396,7 +396,10 @@ describe("LLMClient", () => {
     expect(client.currentProvider).toBeTruthy();
     expect(client.currentModel).toBeTruthy();
     expect(client.piModel).toBeDefined();
-    expect(client.piModel.provider).toBe(client.currentProvider);
+    // Ollama routes through OpenAI's API, so piModel.provider may differ
+    if (client.currentProvider !== "ollama") {
+      expect(client.piModel.provider).toBe(client.currentProvider);
+    }
   });
 
   it("initializes with explicit provider and model", async () => {

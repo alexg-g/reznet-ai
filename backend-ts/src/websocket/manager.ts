@@ -263,7 +263,7 @@ export class WebSocketManager {
   ): void {
     if (!this.io) return;
 
-    const { optimize = true, batch = false } = opts;
+    const { optimize = false, batch = false } = opts;
 
     let payload = data;
     let originalSize = 0;

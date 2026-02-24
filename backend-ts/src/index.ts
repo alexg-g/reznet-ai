@@ -128,6 +128,43 @@ await fastify.register(cors, {
 });
 
 // ---------------------------------------------------------------------------
+// camelCase → snake_case response transformer
+// The frontend (designed for Python/SQLAlchemy) expects snake_case JSON keys,
+// but Drizzle ORM returns camelCase. This global hook converts all response
+// keys before serialization.
+// ---------------------------------------------------------------------------
+
+/** Special-case field name overrides (Drizzle JS name → DB column name). */
+const FIELD_OVERRIDES: Record<string, string> = {
+  msgMetadata: "metadata",
+  memMetadata: "metadata",
+};
+
+/** Convert a single camelCase key to snake_case. */
+function camelToSnakeKey(key: string): string {
+  if (FIELD_OVERRIDES[key]) return FIELD_OVERRIDES[key];
+  return key.replace(/([A-Z])/g, "_$1").toLowerCase();
+}
+
+/** Recursively transform all object keys from camelCase to snake_case. */
+function transformToSnakeCase(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(transformToSnakeCase);
+  if (typeof obj === "object" && !(obj instanceof Date)) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      result[camelToSnakeKey(key)] = transformToSnakeCase(value);
+    }
+    return result;
+  }
+  return obj;
+}
+
+fastify.addHook("preSerialization", async (_request, _reply, payload) => {
+  return transformToSnakeCase(payload);
+});
+
+// ---------------------------------------------------------------------------
 // Per-request query profiling middleware
 // Mirrors the database_query_profiling_middleware in main.py.
 // Uses Fastify lifecycle hooks instead of ASGI middleware:

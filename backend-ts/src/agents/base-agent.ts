@@ -421,6 +421,7 @@ export class RezNetAgent {
 
   /**
    * Extract the final text response from the agent's message history.
+   * Throws if the LLM returned an error (e.g., invalid API key).
    */
   private extractResponseText(): string {
     const messages = this.piAgent.state.messages;
@@ -430,6 +431,15 @@ export class RezNetAgent {
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i] as AgentMessage;
       if (msg.role === "assistant") {
+        // Detect pi-ai silent errors (invalid API key, rate limit, etc.)
+        const anyMsg = msg as unknown as Record<string, unknown>;
+        if (anyMsg.stopReason === "error") {
+          throw new Error(
+            `LLM API error (provider may have returned an error). ` +
+            `Check your API key and provider configuration.`
+          );
+        }
+
         // Extract text content blocks
         if (Array.isArray(msg.content)) {
           for (const block of msg.content) {

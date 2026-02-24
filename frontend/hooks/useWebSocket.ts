@@ -9,7 +9,7 @@ import type { Message, AgentStatus } from '@/lib/types'
 let socket: Socket | null = null
 
 export function useWebSocket() {
-  const { addMessage, updateAgentStatus, clearMessages } = useChatStore()
+  const { addMessage, updateMessage, appendToMessage, updateAgentStatus, clearMessages } = useChatStore()
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
@@ -36,6 +36,24 @@ export function useWebSocket() {
       socket.on('message_new', (data: Message) => {
         console.log('New message:', data)
         addMessage(data)
+      })
+
+      socket.on('message_stream', (data: { message_id: string; chunk: string; is_final: boolean; channel_id?: string }) => {
+        if (!data.is_final && data.chunk) {
+          // Find which channel this message belongs to by searching all channels
+          const state = useChatStore.getState()
+          for (const [channelId, msgs] of Object.entries(state.messages)) {
+            if (msgs.some(m => m.id === data.message_id)) {
+              appendToMessage(channelId, data.message_id, data.chunk)
+              break
+            }
+          }
+        }
+      })
+
+      socket.on('message_update', (data: Message) => {
+        console.log('Message update:', data)
+        updateMessage(data)
       })
 
       socket.on('agent_status', (data: AgentStatus) => {
@@ -77,7 +95,7 @@ export function useWebSocket() {
         socket = null
       }
     }
-  }, [addMessage, updateAgentStatus, clearMessages])
+  }, [addMessage, updateMessage, appendToMessage, updateAgentStatus, clearMessages])
 
   return socketRef.current
 }

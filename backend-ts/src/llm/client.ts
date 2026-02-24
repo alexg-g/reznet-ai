@@ -126,7 +126,9 @@ export function getAvailableProviders(): string[] {
  * Resolve a provider + optional model into a pi-ai Model instance.
  *
  * Uses settings defaults when model is not specified.
- * Handles Ollama's OpenAI-compatible API routing.
+ * Handles Ollama's OpenAI-compatible API routing (pi-ai has no native
+ * Ollama provider, so we construct a model object that uses Ollama's
+ * OpenAI-compatible endpoint with the openai-responses API).
  */
 export function resolveModel(
   provider?: string,
@@ -134,6 +136,23 @@ export function resolveModel(
 ): Model<Api> {
   const resolvedProvider = provider ?? settings.DEFAULT_LLM_PROVIDER;
   const resolvedModel = modelId ?? getDefaultModel(resolvedProvider);
+
+  // Ollama: pi-ai has no native provider, so we build a Model object that
+  // routes through Ollama's OpenAI-compatible /v1 endpoint.
+  if (resolvedProvider === "ollama") {
+    return {
+      id: resolvedModel,
+      name: resolvedModel,
+      api: "openai-responses",
+      provider: "openai",          // pi-ai uses this for API key lookup
+      baseUrl: `${settings.OLLAMA_HOST}/v1`,
+      reasoning: false,
+      input: ["text"],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 32000,
+      maxTokens: 4000,
+    } as Model<Api>;
+  }
 
   // pi-ai uses getModel(provider, modelId) with typed overloads.
   // We cast because the provider/model combination is validated at runtime by pi-ai.
