@@ -12,7 +12,7 @@
   "author": "RezNet AI",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "@octokit/rest": "^20.0.2"
