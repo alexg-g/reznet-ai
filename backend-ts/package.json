@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/node": "^22.19.15",
     "@types/pg": "^8.20.0",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.57.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
